@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
+import httpx
 from bs4 import BeautifulSoup
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
 
@@ -31,11 +32,14 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 log = logging.getLogger("mf-engine.seed")
+logging.getLogger("httpx").setLevel(logging.WARNING)  # per-request GET lines are noise
 
 # NOTE: /members returns 404 — the directory lives on the About AMFI page's
 # members tab, rendered client-side. Member names link to /member/{id} pages.
 AMFI_MEMBERS_URL = "https://www.amfiindia.com/aboutamfi?tab=members"
 OUTPUT_PATH = Path("data/amc_seed_list.json")
+SITEMAP_TIMEOUT = 8.0
+SITEMAP_CONCURRENCY = 10
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -255,9 +259,10 @@ def build_records_from_payload(members: list[dict]) -> list[dict]:
     records = []
     for member in members:
         cleaned = clean_name(member["mf_name"])
+        domain = ""
         if member["website"].startswith("http"):
             domain = website_to_domain(member["website"])
-        else:  # a few members ship without a website; fall back to the map
+        if not domain:  # missing or malformed website; fall back to the map
             domain = resolve_domain(cleaned)
         records.append(
             {
@@ -266,7 +271,6 @@ def build_records_from_payload(members: list[dict]) -> list[dict]:
                 "legal_name": member["amc_name"],
                 "clean_name": cleaned,
                 "base_domain": domain,
-                "team_url_guess": f"https://{domain}/fund-managers",
             }
         )
     return records
@@ -285,10 +289,82 @@ def build_records(firm_names: list[str]) -> list[dict]:
                 "legal_name": "",
                 "clean_name": cleaned,
                 "base_domain": domain,
-                "team_url_guess": f"https://{domain}/fund-managers",
             }
         )
     return records
+
+
+# Probed in order after robots.txt. XML preferred; /sitemap and /site-map are
+# HTML sitemap pages some AMCs use instead (e.g. hdfcfund.com/sitemap,
+# kotakmf.com/site-map) — still a full page inventory for Phase 2.
+CANDIDATE_SITEMAP_PATHS = ["/sitemap.xml", "/sitemap_index.xml", "/sitemap", "/site-map"]
+
+
+async def discover_sitemap(
+    client: httpx.AsyncClient, domain: str
+) -> tuple[str, str, bool]:
+    """Find a site's sitemap: robots.txt directive first, path probes second.
+
+    Returns (sitemap_url, sitemap_type, verified) where type is "xml" or
+    "html". Unreachable sites keep the conventional /sitemap.xml guess with
+    verified=False so Phase 2 knows to re-probe with a real browser.
+    """
+    try:
+        resp = await client.get(f"https://{domain}/robots.txt")
+        if resp.status_code == 200:
+            declared = re.findall(r"(?im)^\s*sitemap:\s*(\S+)", resp.text)
+            if declared:
+                return declared[0], "xml", True
+    except httpx.HTTPError:
+        pass
+
+    for path in CANDIDATE_SITEMAP_PATHS:
+        try:
+            resp = await client.get(f"https://{domain}{path}")
+        except httpx.HTTPError:
+            continue
+        # follow_redirects is on: a path that bounces to the homepage is a miss
+        if resp.status_code != 200 or "sitemap" not in str(resp.url).replace("-", ""):
+            continue
+        looks_xml = "xml" in resp.headers.get("content-type", "") or (
+            resp.text.lstrip().startswith("<?xml")
+        )
+        if looks_xml:
+            return str(resp.url), "xml", True
+        if path in ("/sitemap", "/site-map"):
+            return str(resp.url), "html", True
+    return f"https://{domain}/sitemap.xml", "xml", False
+
+
+async def enrich_with_sitemaps(records: list[dict]) -> None:
+    """Attach sitemap_url/sitemap_verified to every record, concurrently."""
+    semaphore = asyncio.Semaphore(SITEMAP_CONCURRENCY)
+    async with httpx.AsyncClient(
+        follow_redirects=True,
+        timeout=SITEMAP_TIMEOUT,
+        headers={"User-Agent": USER_AGENT},
+    ) as client:
+
+        async def probe(record: dict) -> None:
+            async with semaphore:
+                try:
+                    url, kind, verified = await discover_sitemap(
+                        client, record["base_domain"]
+                    )
+                except Exception:
+                    url, kind, verified = (
+                        f"https://{record['base_domain']}/sitemap.xml",
+                        "xml",
+                        False,
+                    )
+                record["sitemap_url"] = url
+                record["sitemap_type"] = kind
+                record["sitemap_verified"] = verified
+
+        await asyncio.gather(*(probe(r) for r in records))
+
+    found = sum(1 for r in records if r["sitemap_verified"])
+    log.info("Sitemaps verified for %d/%d domains", found, len(records))
 
 
 def parse_member_names(html: str) -> list[str]:
@@ -384,6 +460,9 @@ async def main() -> int:
         )
         records = build_records(STATIC_AMC_NAMES)
         source = "static_fallback"
+
+    log.info("Probing %d domains for sitemaps...", len(records))
+    await enrich_with_sitemaps(records)
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(

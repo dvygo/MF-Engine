@@ -8,12 +8,12 @@ flowchart TD
 
     subgraph PH1["Phase 1 — Seed list (implemented)"]
         SCRAPER["main.py scraper<br/>Crawl4AI + Chromium<br/>embedded-payload extraction"]
-        SEED["data/amc_seed_list.json<br/>~55 AMCs: mf_id, names,<br/>official domains, team_url_guess"]
+        SEED["data/amc_seed_list.json<br/>~55 AMCs: mf_id, names,<br/>official domains, verified sitemap_url"]
         SCRAPER --> SEED
     end
 
     subgraph PH2["Phase 2 — Team page discovery (planned)"]
-        DISCOVER["Crawl each base_domain<br/>validate domain, find team page"]
+        DISCOVER["Parse sitemap_url per AMC<br/>filter team/manager URLs<br/>browser re-probe WAF-walled sites"]
         TEAMURLS["verified team_url per AMC"]
         DISCOVER --> TEAMURLS
     end

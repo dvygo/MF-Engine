@@ -9,10 +9,11 @@ Scrape the AMFI members directory, normalize firm names, resolve corporate domai
 - Name cleaning strips legal suffixes ("Mutual Fund", "Asset Management Company", "Ltd", …).
 - Domain resolution for records without a website (and for fallback paths): `KNOWN_DOMAINS` curated map → substring match (longest key first) → `www.{slug}mf.com` guess.
 - Resilience chain: payload extraction → DOM text scan → embedded static roster (49 names). The run's source is logged; the script always produces a seed file.
+- **Sitemap discovery**: every domain is probed concurrently (httpx, semaphore 10) — `robots.txt` `Sitemap:` directive, then `/sitemap.xml`, `/sitemap_index.xml`, `/sitemap`, `/site-map` — and records carry `sitemap_url` / `sitemap_type` / `sitemap_verified` (~39/55 verify over plain HTTP; WAF-walled sites like HDFC need Phase 2's browser).
 
 ## Phase 2 — Team page discovery (planned)
 
-For each seed record, crawl `base_domain`, validate the domain resolves, and locate the actual fund-managers/team page (checking `team_url_guess`, sitemaps, nav links). AMFI's per-member detail pages (`https://www.amfiindia.com/member/{id}`) can cross-check corporate websites. Output: verified `team_url` per AMC.
+For each seed record, locate the actual fund-managers/team page: parse `sitemap_url` (XML: `<loc>` entries; HTML: anchor inventory) and filter for team/management/fund-manager URLs; re-probe unverified sitemaps with headless Chromium (WAF-walled sites); fall back to nav-link crawling of `base_domain`. Output: verified `team_url` per AMC.
 
 ## Phase 3 — Fund manager extraction (planned)
 

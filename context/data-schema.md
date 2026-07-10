@@ -11,7 +11,9 @@ JSON array, one object per AMC:
 | `legal_name` | string | Registered AMC entity (`amc_name`), e.g. `"PPFAS Asset Management Pvt. Ltd."`. Empty string on fallback paths. |
 | `clean_name` | string | Core name after stripping legal suffixes, e.g. `"PPFAS"`. Join key for domain mapping. |
 | `base_domain` | string | Corporate domain. Live path: taken from AMFI's official `amc_website` field (authoritative). Fallback: curated `KNOWN_DOMAINS` map, else `www.{slug}mf.com` guess. No scheme, no `www.`. |
-| `team_url_guess` | string | Unverified guess at the fund-managers page: `https://{base_domain}/fund-managers`. Phase 2 validates/replaces it. |
+| `sitemap_url` | string | Site's sitemap, discovered at seed time: `robots.txt` `Sitemap:` directive first, then probes of `/sitemap.xml`, `/sitemap_index.xml`, `/sitemap`, `/site-map`. When nothing verifies, holds the conventional `/sitemap.xml` guess. |
+| `sitemap_type` | string | `"xml"` (machine sitemap) or `"html"` (human sitemap page, e.g. taurusmutualfund.com/sitemap) — Phase 2 parses each differently. |
+| `sitemap_verified` | boolean | `true` = URL answered 200 with plausible content over plain HTTP. `false` = probe failed (often WAF/bot-block, e.g. hdfcfund.com 403s non-browser clients) — Phase 2 must re-probe with headless Chromium. |
 
 Example object (live path):
 
@@ -22,7 +24,9 @@ Example object (live path):
   "legal_name": "PPFAS Asset Management Pvt. Ltd.",
   "clean_name": "PPFAS",
   "base_domain": "amc.ppfas.com",
-  "team_url_guess": "https://amc.ppfas.com/fund-managers"
+  "sitemap_url": "https://amc.ppfas.com/sitemap.xml",
+  "sitemap_type": "xml",
+  "sitemap_verified": true
 }
 ```
 

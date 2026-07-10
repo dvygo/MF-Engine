@@ -26,9 +26,10 @@ flowchart TD
     NONE --> STATIC
     STATIC --> BUILDS["build_records(names)"]
 
-    BUILDP --> WRITE["write data/amc_seed_list.json<br/>indent=2, utf-8"]
-    BUILDN --> WRITE
-    BUILDS --> WRITE
+    BUILDP --> SM["enrich_with_sitemaps<br/>concurrent httpx, semaphore 10:<br/>robots.txt directive, then /sitemap.xml,<br/>/sitemap_index.xml, /sitemap, /site-map"]
+    BUILDN --> SM
+    BUILDS --> SM
+    SM --> WRITE["write data/amc_seed_list.json<br/>indent=2, utf-8"]
     WRITE --> END(["exit 0"])
 ```
 

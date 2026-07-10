@@ -57,9 +57,13 @@ sequenceDiagram
 
     loop each record
         R->>R: clean_name — strip legal suffixes
-        R->>R: team_url_guess = https://{domain}/fund-managers
     end
     R-->>M: records
+
+    participant W as AMC websites
+    M->>W: enrich_with_sitemaps — concurrent probes
+    Note over M,W: robots.txt Sitemap: directive, else<br/>/sitemap.xml, /sitemap_index.xml, /sitemap, /site-map<br/>redirect-to-homepage guarded
+    W-->>M: sitemap_url + type (xml/html) + verified flag
 
     M->>FS: mkdir data/, write JSON indent=2
     M-->>M: log count + source, exit 0
