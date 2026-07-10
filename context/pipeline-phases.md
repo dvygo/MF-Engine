@@ -13,11 +13,16 @@ Scrape the AMFI members directory, normalize firm names, resolve corporate domai
 
 ## Phase 2 — Team page discovery (planned)
 
-For each seed record, locate the actual fund-managers/team page: parse `sitemap_url` (XML: `<loc>` entries; HTML: anchor inventory) and filter for team/management/fund-manager URLs; re-probe unverified sitemaps with headless Chromium (WAF-walled sites); fall back to nav-link crawling of `base_domain`. Output: verified `team_url` per AMC.
+For each seed record, parse `sitemap_url` (XML: `<loc>` entries; HTML: anchor inventory) and harvest **two** URL sets:
+
+1. **Team/management pages** — URLs matching team/management/fund-manager/leadership patterns. Roster + bios.
+2. **Scheme pages** — URLs matching fund/scheme patterns (e.g. HDFC's `/explore/mutual-funds/{scheme}/regular`). Each scheme page names its fund managers with designations — the direct manager→fund mapping, richer than a roster.
+
+`sitemap_verified: false` usually means UA-based WAF (hdfcfund.com 403s httpx but serves browsers) — re-probe those with headless Chromium, which Phase 2 uses anyway. Fall back to nav-link crawling of `base_domain` when no sitemap exists. Output: per AMC, a `team_url` + list of scheme URLs.
 
 ## Phase 3 — Fund manager extraction (planned)
 
-Crawl each verified team page and extract structured manager profiles: name, designation, funds managed, experience, qualifications. LLM-assisted extraction (vLLM serving Qwen, OpenAI-compatible endpoint on :8000 — see `docker/docker-compose.yml`) since page structures vary per AMC.
+Crawl each verified team page and scheme page, extract structured manager profiles: name, designation, funds managed, experience, qualifications. Scheme pages yield the manager→fund edges (one page per fund, managers listed with titles); team pages yield fuller bios. Merge on manager name per AMC. LLM-assisted extraction (vLLM serving Qwen, OpenAI-compatible endpoint on :8000 — see `docker/docker-compose.yml`) since page structures vary per AMC.
 
 ## Phase 4 — Persistence (planned)
 
