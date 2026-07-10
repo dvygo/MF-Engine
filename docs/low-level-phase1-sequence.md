@@ -32,28 +32,31 @@ sequenceDiagram
     end
 
     opt html present
-        M->>P: parse_member_names(html)
-        P->>BS: soup.select("a[href*='/member/']")
-        alt >= 20 member anchors
-            BS-->>P: anchor texts
-            P-->>M: deduped names (primary path)
-        else layout changed / partial render
+        M->>P: parse_member_payload(html)
+        Note over P: unescape \" then regex the hydration JSON:<br/>mf_id, mf_name, amc_name, amc_website
+        alt >= 20 payload records (normal: ~55)
+            P-->>M: official records (source=live_payload)
+            M->>R: build_records_from_payload(members)
+            loop each member
+                R->>R: base_domain = official amc_website netloc
+                R->>R: no website? resolve_domain fallback
+            end
+        else payload extraction failed
+            M->>P: parse_member_names(html)
             P->>BS: find_all leaf nodes, regex filter
             BS-->>P: candidate strings
-            P-->>M: deduped names (fallback scan)
+            P-->>M: deduped names (source=live_dom_scan)
+            M->>R: build_records(names)
         end
     end
 
-    alt len(names) < 20
-        M->>M: names = STATIC_AMC_NAMES (49, source=static_fallback)
-    else live parse healthy
-        M->>M: source=live
+    opt still no records
+        M->>M: STATIC_AMC_NAMES (49, source=static_fallback)
+        M->>R: build_records(names)
     end
 
-    M->>R: build_records(names)
-    loop each firm name
+    loop each record
         R->>R: clean_name — strip legal suffixes
-        R->>R: resolve_domain — exact, partial longest-first, slug guess
         R->>R: team_url_guess = https://{domain}/fund-managers
     end
     R-->>M: records

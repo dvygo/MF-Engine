@@ -5,9 +5,10 @@
 Scrape the AMFI members directory, normalize firm names, resolve corporate domains, write `data/amc_seed_list.json`.
 
 - Live scrape via Crawl4AI (`AsyncWebCrawler`, headless Chromium, cache bypass, defensive render wait).
+- **Primary parse**: the members page hydrates from an embedded escaped-JSON payload with one object per AMC — `mf_id`, `mf_name`, `amc_name`, and the **official `amc_website`**. Regex extraction over the unescaped HTML yields ~55 records with authoritative domains; no guessing.
 - Name cleaning strips legal suffixes ("Mutual Fund", "Asset Management Company", "Ltd", …).
-- Domain resolution: `KNOWN_DOMAINS` curated map → substring match → `www.{slug}mf.com` guess.
-- Resilience: if the live parse returns fewer than 20 names, an embedded static roster of active AMCs is used instead, and the output records the source. The script always produces a seed file.
+- Domain resolution for records without a website (and for fallback paths): `KNOWN_DOMAINS` curated map → substring match (longest key first) → `www.{slug}mf.com` guess.
+- Resilience chain: payload extraction → DOM text scan → embedded static roster (49 names). The run's source is logged; the script always produces a seed file.
 
 ## Phase 2 — Team page discovery (planned)
 

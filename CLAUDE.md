@@ -1,6 +1,6 @@
 # MF-Engine
 
-Pipeline that extracts fund-manager data from India's 49 active Asset Management Companies (AMCs). The AMFI members directory (https://www.amfiindia.com/aboutamfi?tab=members — note: `/members` is a 404) is the source of truth for which AMCs exist. Phase 1 (implemented, `main.py`) scrapes that directory, resolves each AMC's corporate domain, and emits the crawler seed list `data/amc_seed_list.json`. Later phases crawl each AMC's site for team pages, extract fund-manager profiles, and persist to a MinIO data lake.
+Pipeline that extracts fund-manager data from India's ~55 AMFI-member Asset Management Companies (AMCs). The AMFI members directory (https://www.amfiindia.com/aboutamfi?tab=members — note: `/members` is a 404) is the source of truth for which AMCs exist. Phase 1 (implemented, `main.py`) scrapes that directory, resolves each AMC's corporate domain, and emits the crawler seed list `data/amc_seed_list.json`. Later phases crawl each AMC's site for team pages, extract fund-manager profiles, and persist to a MinIO data lake.
 
 Read the `context/` docs before working on pipeline logic:
 

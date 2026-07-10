@@ -17,8 +17,8 @@ sequenceDiagram
     U->>DC: docker compose run --rm scraper
     DC->>S: build image (cached) + fresh container
     S->>AMFI: render members directory (headless Chromium)
-    AMFI-->>S: 49 AMC names
-    S->>S: clean names, resolve domains
+    AMFI-->>S: hydration payload: ~55 AMCs with official websites
+    S->>S: clean names, derive domains (official first, map/guess fallback)
     S-->>U: data/amc_seed_list.json (container exits, --rm deletes)
 
     Note over S,AMC: Phase 2 — per seed record

@@ -16,24 +16,19 @@ flowchart TD
     OK -- "no / exception" --> NONE["html = None"]
     OK -- yes --> HTML["result.html"]
 
-    HTML --> PARSE["parse_member_names(html)"]
-    subgraph PARSER["Parser with fallbacks"]
-        PARSE --> ANCH["harvest a[href*='/member/'] anchors"]
-        ANCH --> A20{">= 20 anchors?"}
-        A20 -- yes --> DEDUP1["_dedupe on clean name"]
-        A20 -- no --> SCAN["scan td/li/a/h3/h4/p/div/span leaf nodes<br/>keep 'mutual fund | asset management' strings<br/>drop NON_AMC_PATTERNS"]
-        SCAN --> DEDUP2["_dedupe on clean name"]
-    end
+    HTML --> PAYLOAD["parse_member_payload(html)<br/>unescape + regex over hydration JSON:<br/>mf_id, mf_name, amc_name, amc_website"]
+    PAYLOAD --> P20{">= 20 records?"}
+    P20 -- yes --> BUILDP["build_records_from_payload<br/>official website to base_domain<br/>source=live_payload"]
+    P20 -- no --> SCAN["parse_member_names(html)<br/>scan leaf nodes for<br/>'mutual fund | asset management' strings"]
+    SCAN --> S20{">= 20 names?"}
+    S20 -- yes --> BUILDN["build_records(names)<br/>KNOWN_DOMAINS / slug guess<br/>source=live_dom_scan"]
+    S20 -- no --> STATIC["STATIC_AMC_NAMES (49)<br/>source=static_fallback"]
+    NONE --> STATIC
+    STATIC --> BUILDS["build_records(names)"]
 
-    NONE --> COUNT
-    DEDUP1 --> COUNT{"len(names) >= 20?"}
-    DEDUP2 --> COUNT
-    COUNT -- no --> STATIC["STATIC_AMC_NAMES<br/>49 verified AMCs, source=static_fallback"]
-    COUNT -- yes --> LIVE["source=live"]
-
-    STATIC --> BUILD["build_records(names)"]
-    LIVE --> BUILD
-    BUILD --> WRITE["write data/amc_seed_list.json<br/>indent=2, utf-8"]
+    BUILDP --> WRITE["write data/amc_seed_list.json<br/>indent=2, utf-8"]
+    BUILDN --> WRITE
+    BUILDS --> WRITE
     WRITE --> END(["exit 0"])
 ```
 

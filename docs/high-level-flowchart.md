@@ -7,8 +7,8 @@ flowchart TD
     AMFI["AMFI members directory<br/>amfiindia.com/aboutamfi?tab=members"]
 
     subgraph PH1["Phase 1 — Seed list (implemented)"]
-        SCRAPER["main.py scraper<br/>Crawl4AI + Chromium"]
-        SEED["data/amc_seed_list.json<br/>49 AMCs: name, domain, team_url_guess"]
+        SCRAPER["main.py scraper<br/>Crawl4AI + Chromium<br/>embedded-payload extraction"]
+        SEED["data/amc_seed_list.json<br/>~55 AMCs: mf_id, names,<br/>official domains, team_url_guess"]
         SCRAPER --> SEED
     end
 

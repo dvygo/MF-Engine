@@ -20,6 +20,7 @@ import logging
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
@@ -176,6 +177,16 @@ NON_AMC_PATTERNS = re.compile(
     r"association of mutual funds|amfi|registrar|trustee", re.IGNORECASE
 )
 
+# The members page hydrates from an embedded (escaped) JSON payload with one
+# object per AMC: {"mf_id":"64","mf_name":"PPFAS Mutual Fund",
+# "amc_name":"PPFAS Asset Management Pvt. Ltd.","amc_website":"https://amc.ppfas.com",...}
+# Field order is stable, so a sequential regex over the unescaped HTML is the
+# most reliable extraction — official websites included, no guessing needed.
+PAYLOAD_RECORD_RE = re.compile(
+    r'"mf_id":"(?P<mf_id>\d+)","mf_name":"(?P<mf_name>[^"]+)",'
+    r'"amc_name":"(?P<amc_name>[^"]+)","amc_website":"(?P<website>[^"]*)"'
+)
+
 
 def clean_name(firm_name: str) -> str:
     """Strip legal suffixes and normalize whitespace: core firm name only."""
@@ -216,7 +227,53 @@ def resolve_domain(cleaned: str) -> str:
     return guess
 
 
+def website_to_domain(website: str) -> str:
+    """'https://www.dspim.com/x' -> 'dspim.com' (keep non-www subdomains)."""
+    netloc = urlparse(website).netloc.lower()
+    return netloc.removeprefix("www.")
+
+
+def parse_member_payload(html: str) -> list[dict]:
+    """Extract AMC records from the page's embedded hydration payload."""
+    text = html.replace('\\"', '"')
+    seen: dict[str, dict] = {}
+    for m in PAYLOAD_RECORD_RE.finditer(text):
+        seen.setdefault(
+            m["mf_id"],
+            {
+                "mf_id": int(m["mf_id"]),
+                "mf_name": m["mf_name"].strip(),
+                "amc_name": m["amc_name"].strip(),
+                "website": m["website"].strip(),
+            },
+        )
+    return sorted(seen.values(), key=lambda r: r["mf_id"])
+
+
+def build_records_from_payload(members: list[dict]) -> list[dict]:
+    """Seed records from official AMFI payload data — stable ids, real websites."""
+    records = []
+    for member in members:
+        cleaned = clean_name(member["mf_name"])
+        if member["website"].startswith("http"):
+            domain = website_to_domain(member["website"])
+        else:  # a few members ship without a website; fall back to the map
+            domain = resolve_domain(cleaned)
+        records.append(
+            {
+                "amc_id": member["mf_id"],
+                "firm_name": member["mf_name"],
+                "legal_name": member["amc_name"],
+                "clean_name": cleaned,
+                "base_domain": domain,
+                "team_url_guess": f"https://{domain}/fund-managers",
+            }
+        )
+    return records
+
+
 def build_records(firm_names: list[str]) -> list[dict]:
+    """Seed records from bare names (fallback paths) — sequential ids."""
     records = []
     for idx, firm in enumerate(firm_names, start=1):
         cleaned = clean_name(firm)
@@ -225,6 +282,7 @@ def build_records(firm_names: list[str]) -> list[dict]:
             {
                 "amc_id": idx,
                 "firm_name": firm,
+                "legal_name": "",
                 "clean_name": cleaned,
                 "base_domain": domain,
                 "team_url_guess": f"https://{domain}/fund-managers",
@@ -236,21 +294,12 @@ def build_records(firm_names: list[str]) -> list[dict]:
 def parse_member_names(html: str) -> list[str]:
     """Pull AMC names out of the rendered members page.
 
-    Primary signal: member names anchor to /member/{id} detail pages. If the
-    page ships fewer than 20 such links (layout change, partial render), fall
-    back to scanning every plausible container for AMC-shaped strings.
+    Secondary path — used only if the embedded payload extraction comes up
+    short. Scans every plausible container for AMC-shaped strings.
     """
     soup = BeautifulSoup(html, "html.parser")
 
     candidates: list[str] = []
-    for anchor in soup.select("a[href*='/member/']"):
-        text = re.sub(r"\s+", " ", anchor.get_text(" ", strip=True))
-        if 3 < len(text) < 90 and not NON_AMC_PATTERNS.search(text):
-            candidates.append(text)
-    if len(candidates) >= 20:
-        return _dedupe(candidates)
-
-    candidates = []
     for tag in soup.find_all(["td", "li", "a", "h3", "h4", "p", "div", "span"]):
         # Leaf-ish nodes only; deep containers repeat all their children's text.
         if tag.find(["td", "li", "div", "p", "table", "ul"]):
@@ -307,26 +356,34 @@ async def main() -> int:
     log.info("Fetching AMFI members directory: %s", AMFI_MEMBERS_URL)
     html = await fetch_members_html()
 
-    names: list[str] = []
-    source = "live"
+    records: list[dict] = []
+    source = "live_payload"
     if html:
         try:
+            members = parse_member_payload(html)
+            if len(members) >= 20:  # sane roster is ~50
+                log.info("Payload extraction yielded %d AMC records", len(members))
+                records = build_records_from_payload(members)
+        except Exception:
+            log.exception("Payload extraction failed")
+
+    if not records and html:
+        try:
             names = parse_member_names(html)
+            if len(names) >= 20:
+                log.info("DOM text scan yielded %d AMC names", len(names))
+                records = build_records(names)
+                source = "live_dom_scan"
         except Exception:
             log.exception("Parsing members page failed")
 
-    if len(names) < 20:  # sane roster is ~44; fewer means the parse broke
+    if not records:
         log.warning(
-            "Live scrape yielded %d names — using embedded static roster (%d AMCs)",
-            len(names),
+            "Live scrape unusable — using embedded static roster (%d AMCs)",
             len(STATIC_AMC_NAMES),
         )
-        names = STATIC_AMC_NAMES
+        records = build_records(STATIC_AMC_NAMES)
         source = "static_fallback"
-    else:
-        log.info("Live scrape yielded %d AMC names", len(names))
-
-    records = build_records(names)
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(
