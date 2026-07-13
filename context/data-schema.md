@@ -30,6 +30,18 @@ Example object (live path):
 }
 ```
 
+## `data/amc_page_inventory.json` (Phase 2 output)
+
+JSON array, one object per AMC:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `amc_id` / `firm_name` / `base_domain` | — | Carried from the seed list. |
+| `source` | string | How URLs were obtained: `sitemap_xml`, `sitemap_index`, `sitemap_html`, `homepage_anchors`, `unreachable`, `error`. |
+| `discovered_total` | integer | Raw URL count found (pre-classification, capped 2000). |
+| `team_urls` | string[] | Discovered URLs whose path matches team/management/leadership patterns, resolved to final destinations. |
+| `scheme_urls` | string[] | Discovered URLs whose path marks a fund/scheme page (manager→fund mapping lives here). |
+
 ## Source of a run (logged, not stored in the file)
 
 - `live_payload` — extracted from the members page's embedded hydration JSON (has `mf_id`, `legal_name`, official websites). Normal case; yields ~55 records as of July 2026, including not-yet-launched members (e.g. ASK, Lakshya) that have no website and get a slug guess.

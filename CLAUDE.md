@@ -22,7 +22,8 @@ Local run:
 ```bash
 pip install -r requirements.txt
 playwright install chromium   # one-time browser download
-python main.py                # writes data/amc_seed_list.json
+python main.py                # Phase 1: writes data/amc_seed_list.json
+python phase2_discover.py     # Phase 2: writes data/amc_page_inventory.json
 ```
 
 Docker (scraper image only):

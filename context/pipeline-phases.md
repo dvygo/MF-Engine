@@ -11,7 +11,7 @@ Scrape the AMFI members directory, normalize firm names, resolve corporate domai
 - Resilience chain: payload extraction → DOM text scan → embedded static roster (49 names). The run's source is logged; the script always produces a seed file.
 - **Sitemap discovery**: every domain is probed concurrently (httpx, semaphore 10) — `robots.txt` `Sitemap:` directive, then `/sitemap.xml`, `/sitemap_index.xml`, `/sitemap`, `/site-map` — and records carry `sitemap_url` / `sitemap_type` / `sitemap_verified` (~39/55 verify over plain HTTP; WAF-walled sites like HDFC need Phase 2's browser).
 
-## Phase 2 — Team page discovery (planned)
+## Phase 2 — Team & scheme page discovery (implemented: `phase2_discover.py`)
 
 **Hard rule: never construct or template URLs.** Only URLs that actually appear in the sitemap (or on-page anchors) get crawled, each followed through redirects to its final destination before scraping. Pattern-matching is for *classifying* discovered URLs only.
 
@@ -20,7 +20,9 @@ For each seed record, parse `sitemap_url` (XML: `<loc>` entries; HTML: anchor in
 1. **Team/management pages** — discovered URLs whose path mentions team/management/fund-manager/leadership. Roster + bios.
 2. **Scheme pages** — discovered URLs whose path marks a fund/scheme (HDFC's sitemap, for instance, lists every scheme page). Each scheme page names its fund managers with designations — the direct manager→fund mapping, richer than a roster.
 
-`sitemap_verified: false` usually means UA-based WAF (hdfcfund.com 403s httpx but serves browsers) — re-probe those with headless Chromium, which Phase 2 uses anyway. Fall back to nav-link crawling of `base_domain` when no sitemap exists. Output: per AMC, a `team_url` + list of scheme URLs.
+Fetch strategy per URL: httpx first, headless Chromium fallback (WAF-walled sites; Chrome's XML viewer still exposes `<loc>` tags), and a `www.` host variant retry — some CDNs hard-deny the apex host while serving www (Akamai on hdfcfund.com). Sitemap indexes recurse into child sitemaps (capped 15). No usable sitemap → homepage anchors (still discovered URLs). Team URLs are resolved through redirects to final destinations.
+
+Output: `data/amc_page_inventory.json`. Current yield: 25/55 AMCs with team pages, 35/55 with scheme pages (152 team + 4660 scheme URLs). Known gaps: ICICI/UTI/Franklin Templeton/ITI resist both httpx and vanilla Chromium (challenge pages) — need stealth/wait tuning; a few zero-yield AMCs need per-site classifier patterns.
 
 ## Phase 3 — Fund manager extraction (planned)
 
