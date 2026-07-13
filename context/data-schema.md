@@ -43,6 +43,21 @@ JSON array, one object per AMC:
 | `team_urls` | string[] | Discovered URLs whose path matches team/management/leadership patterns, resolved to final destinations. |
 | `scheme_urls` | string[] | Discovered URLs whose path marks a fund/scheme page (manager→fund mapping lives here). |
 
+## `data/fund_managers.csv` (Phase 3 output)
+
+One row per (AMC, manager). Columns:
+
+| Column | Meaning |
+|---|---|
+| `firm_name` | AMC name (from the seed list). |
+| `manager_name` | Extracted person name. |
+| `designation` | Role label found next to the name (Fund Manager, CIO, …). |
+| `email` | Personal email if found on the page, else an on-domain generic (service@/info@), else blank — most AMCs don't publish per-manager emails. |
+| `location` | Best-effort HQ city (Indian-city match near an office/address cue). |
+| `source_url` | The team page the row was extracted from. |
+
+Heuristic output — expect some misses and the occasional heading picked up as a name. An LLM pass would tighten it.
+
 ## Source of a run (logged, not stored in the file)
 
 - `live_payload` — extracted from the members page's embedded hydration JSON (has `mf_id`, `legal_name`, official websites). Normal case; yields ~55 records as of July 2026, including not-yet-launched members (e.g. ASK, Lakshya) that have no website and get a slug guess.

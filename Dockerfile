@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
     && playwright install --with-deps chromium
 
-COPY main.py phase2_discover.py ./
+COPY main.py phase2_discover.py phase3_extract.py ./
 
 # Seed list lands here; mount it to keep output on the host:
 #   docker run -v ./data:/app/data mf-engine

@@ -26,9 +26,16 @@ Fetch strategy per URL: httpx first, headless Chromium fallback (Chrome's XML vi
 
 Output: `data/amc_page_inventory.json` (records carry `canonical_host`). Current yield: 29/55 AMCs with team pages, 40/55 with scheme pages (186 team + 7372 scheme URLs). Remaining zero-yield are small/newly-launched houses (Invesco's `/FundPage` slugless paths, Angel One, Choice, Unifi, ASK, Monarch, AlphaGrep) needing per-site classifier patterns, plus Lakshya (DNS does not resolve — site not up yet) and Abakkus (upstream sitemap misconfig).
 
-## Phase 3 — Fund manager extraction (planned)
+## Phase 3 — Fund manager extraction (implemented: `phase3_extract.py`)
 
-Crawl each verified team page and scheme page, extract structured manager profiles: name, designation, funds managed, experience, qualifications. Scheme pages yield the manager→fund edges (one page per fund, managers listed with titles); team pages yield fuller bios. Merge on manager name per AMC. LLM-assisted extraction (vLLM serving Qwen, OpenAI-compatible endpoint on :8000 — see `docker/docker-compose.yml`) since page structures vary per AMC.
+Current scope: crawl each AMC's team/management pages (from Phase 2 `team_urls`, blog/article paths filtered out) and extract **fund-manager name, designation, email, location** into `data/fund_managers.csv`. Heuristic only — no LLM, runs on CPU:
+
+- **Names**: pair a person-name regex (honorific + full capitalised words, single initials allowed) with a designation label (Fund Manager / CIO / Portfolio Manager / Head of Equity…) on the same or preceding line; a stopword set rejects heading/role phrases.
+- **Emails**: regex, generic locals (info@/service@…) deprioritised behind any personal address.
+- **Location**: Indian-city match, preferring a city near an office/address cue.
+- Dedupe on (firm, manager). Current yield: ~137 managers across 18 AMCs.
+
+Crawls with Crawl4AI stealth. Best-effort by design — layouts vary per AMC and few sites publish per-manager emails. **Upgrade path**: swap the heuristic for an LLM pass (vLLM/Qwen on :8000, `instructor` + Pydantic) for cleaner names and manager→fund mapping from scheme pages.
 
 ## Phase 4 — Persistence (planned)
 
