@@ -37,6 +37,7 @@ JSON array, one object per AMC:
 | Field | Type | Meaning |
 |---|---|---|
 | `amc_id` / `firm_name` / `base_domain` | — | Carried from the seed list. |
+| `canonical_host` | string | Host the sitemap actually resolved to (post-redirect); URLs are filtered against this, not `base_domain`. Differs when the AMFI domain redirects (pgimindiamf.com → pgimindia.com). |
 | `source` | string | How URLs were obtained: `sitemap_xml`, `sitemap_index`, `sitemap_html`, `homepage_anchors`, `unreachable`, `error`. |
 | `discovered_total` | integer | Raw URL count found (pre-classification, capped 2000). |
 | `team_urls` | string[] | Discovered URLs whose path matches team/management/leadership patterns, resolved to final destinations. |

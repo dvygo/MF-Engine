@@ -71,13 +71,24 @@ def url_variants(url: str) -> list[str]:
     return variants
 
 
-def same_site(url: str, base_domain: str) -> bool:
-    """Keep URLs on the AMC's registered domain (subdomains allowed)."""
-    netloc = urlparse(url).netloc.lower().removeprefix("www.")
-    root = base_domain.removeprefix("www.")
-    # compare on the last two labels so mf.example.com matches example.com
-    tail = ".".join(root.split(".")[-2:])
-    return netloc == root or netloc.endswith("." + tail)
+def _host(url_or_host: str) -> str:
+    """Bare hostname, www. stripped."""
+    netloc = urlparse(url_or_host).netloc or url_or_host
+    return netloc.lower().split(":")[0].removeprefix("www.")
+
+
+def same_site(url: str, canonical_host: str) -> bool:
+    """True if url is on canonical_host or a subdomain of it (and vice-versa).
+
+    Suffix comparison on the full host — not the last two labels — so
+    multi-part public suffixes like assetmanagement.hsbc.co.in aren't
+    collapsed to co.in and matched against every .co.in site.
+    """
+    a = _host(url)
+    b = _host(canonical_host)
+    if not a or not b:
+        return False
+    return a == b or a.endswith("." + b) or b.endswith("." + a)
 
 
 async def fetch_text(client: httpx.AsyncClient, url: str) -> tuple[str, str] | None:
@@ -97,6 +108,9 @@ async def fetch_via_browser(crawler: AsyncWebCrawler, url: str) -> str | None:
         cache_mode=CacheMode.BYPASS,
         delay_before_return_html=2.0,
         page_timeout=45_000,
+        magic=True,  # auto-handle overlays/consent + anti-bot evasions
+        simulate_user=True,  # human-like mouse/timing
+        override_navigator=True,  # mask webdriver/automation fingerprints
     )
     try:
         result = await crawler.arun(url=url, config=config)
@@ -137,20 +151,40 @@ async def collect_urls(
     domain = record["base_domain"]
 
     async def get(url: str) -> tuple[str, str] | None:
+        """Try apex+www over httpx then Chromium. Some hosts answer the apex
+        with a soft-200 challenge stub (200 OK, no real content) while www
+        serves the true sitemap, so a bare 200 is not enough — short-circuit
+        only on a body that actually contains <loc>, otherwise keep the
+        richest body seen and return that as the fallback."""
+        best: tuple[str, str] | None = None
+
+        async def consider(candidate: str, body: str | None) -> tuple[str, str] | None:
+            nonlocal best
+            if not body:
+                return None
+            if "<loc" in body.lower():
+                return candidate, body  # real XML sitemap — done
+            if best is None or len(body) > len(best[1]):
+                best = (candidate, body)
+            return None
+
         for candidate in url_variants(url):
             got = await fetch_text(client, candidate)
-            if got:
-                return got
+            hit = await consider(got[0], got[1]) if got else None
+            if hit:
+                return hit
         for candidate in url_variants(url):
             async with browser_sem:
                 html = await fetch_via_browser(crawler, candidate)
-            if html:
-                return candidate, html
-        return None
+            hit = await consider(candidate, html)
+            if hit:
+                return hit
+        return best
 
     got = await get(sitemap_url)
     if got:
         final_url, body = got
+        canonical = _host(final_url)  # post-redirect host is the site's true home
         if record["sitemap_type"] == "xml" or "<loc" in body.lower():
             locs, is_index = extract_sitemap_urls(body)
             if is_index:
@@ -163,30 +197,30 @@ async def collect_urls(
                     if len(pages) >= MAX_URLS_PER_AMC:
                         break
                 if pages:
-                    return pages[:MAX_URLS_PER_AMC], "sitemap_index"
+                    return pages[:MAX_URLS_PER_AMC], "sitemap_index", canonical
             if locs:
-                return locs[:MAX_URLS_PER_AMC], "sitemap_xml"
+                return locs[:MAX_URLS_PER_AMC], "sitemap_xml", canonical
         # HTML sitemap page: its anchors are the inventory
         anchors = extract_anchor_urls(body, final_url)
         if anchors:
-            return anchors[:MAX_URLS_PER_AMC], "sitemap_html"
+            return anchors[:MAX_URLS_PER_AMC], "sitemap_html", canonical
 
     # Last resort: the homepage's own nav/anchor links (still discovered URLs)
     home = await get(f"https://{domain}")
     if home:
         anchors = extract_anchor_urls(home[1], home[0])
         if anchors:
-            return anchors[:MAX_URLS_PER_AMC], "homepage_anchors"
-    return [], "unreachable"
+            return anchors[:MAX_URLS_PER_AMC], "homepage_anchors", _host(home[0])
+    return [], "unreachable", domain
 
 
-def classify(urls: list[str], base_domain: str) -> tuple[list[str], list[str]]:
+def classify(urls: list[str], canonical_host: str) -> tuple[list[str], list[str]]:
     team: list[str] = []
     scheme: list[str] = []
     seen: set[str] = set()
     for url in urls:
         url = url.split("#")[0].strip()
-        if not url or url in seen or not same_site(url, base_domain):
+        if not url or url in seen or not same_site(url, canonical_host):
             continue
         seen.add(url)
         path = urlparse(url).path
@@ -217,7 +251,11 @@ async def main() -> int:
 
     http_sem = asyncio.Semaphore(HTTP_CONCURRENCY)
     browser_sem = asyncio.Semaphore(BROWSER_CONCURRENCY)
-    browser_config = BrowserConfig(headless=True, user_agent=USER_AGENT)
+    browser_config = BrowserConfig(
+        headless=True,
+        user_agent=USER_AGENT,
+        enable_stealth=True,  # playwright-stealth: hide headless/automation signals
+    )
     inventory: list[dict] = []
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
@@ -229,11 +267,12 @@ async def main() -> int:
 
             async def process(record: dict) -> None:
                 async with http_sem:
+                    canonical = record["base_domain"]
                     try:
-                        urls, source = await collect_urls(
+                        urls, source, canonical = await collect_urls(
                             client, crawler, browser_sem, record
                         )
-                        team, scheme = classify(urls, record["base_domain"])
+                        team, scheme = classify(urls, canonical)
                         team = await resolve_finals(client, team[:25])
                     except Exception:
                         log.exception("Discovery failed for %s", record["base_domain"])
@@ -243,6 +282,7 @@ async def main() -> int:
                             "amc_id": record["amc_id"],
                             "firm_name": record["firm_name"],
                             "base_domain": record["base_domain"],
+                            "canonical_host": canonical,
                             "source": source,
                             "discovered_total": len(urls),
                             "team_urls": team,
