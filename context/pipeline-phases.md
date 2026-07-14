@@ -37,7 +37,16 @@ Current scope: crawl each AMC's team/management pages (from Phase 2 `team_urls`,
 
 Crawls with Crawl4AI stealth. Best-effort by design — layouts vary per AMC and few sites publish per-manager emails. **Upgrade path**: swap the heuristic for an LLM pass (vLLM/Qwen on :8000, `instructor` + Pydantic) for cleaner names and manager→fund mapping from scheme pages.
 
-## Phase 4 — Persistence (planned)
+## Phase 4 — Enrichment: LinkedIn + email (implemented: `phase4_enrich.py`)
+
+Reads `data/fund_managers.csv` and adds, per manager, a LinkedIn profile URL and a best-effort email → `data/fund_managers_enriched.csv`.
+
+- **LinkedIn**: a web search (`{name} {firm} linkedin`, firm's "Mutual Fund" suffix trimmed) returns the profile URL, which is *stored, never scraped* — LinkedIn walls bots and hides emails anyway. Search backend is pluggable: **SerpAPI** (Bing engine) when `SERPAPI_KEY` is set — reliable JSON; otherwise a best-effort Bing scrape through Crawl4AI stealth Chromium. The free scrape **throttles after ~20–30 queries** (result pages thin out, LinkedIn hits vanish), so scrape mode can't cover a full roster in one run — a search API key is required for reliable full coverage.
+- **Email**: fund managers are AMC employees, not MFDs — no public directory lists their emails, and AMC sites rarely publish them. `email` holds a *verified* address only (from the AMC page in Phase 3, else Hunter.io if `HUNTER_API_KEY` set, else SMTP-verified if `VERIFY_SMTP=1`). `email_guess` holds the most-likely corporate pattern (`first.last@domain`) — kept in a separate column so a guess is never presented as fact.
+
+Fund manager ≠ MFD: the AMFI `/api/distributor-agent` endpoint lists distributors (with contacts) and is not a source for fund managers.
+
+## Phase 6 — Persistence (planned)
 
 Land raw HTML snapshots and extracted JSON in a MinIO data lake (service defined in `docker/docker-compose.yml`, S3 API on :9000), for downstream querying and change tracking. Immutable, date-partitioned — every pull kept, nothing overwritten:
 
@@ -46,7 +55,7 @@ bucket mf-raw-html/   {crawl_date}/{base_domain}/{page}.html   (each page = one 
 bucket mf-extracted/  {crawl_date}/{base_domain}.json          (Phase 3 output)
 ```
 
-## Phase 5 — Semantic search (planned)
+## Phase 7 — Semantic search (planned)
 
 Qdrant (:6333) holds the *latest* state: one point per manager (keyed by manager+firm, upserted each pull) with the extracted profile as payload. Role split:
 

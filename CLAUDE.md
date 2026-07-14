@@ -25,6 +25,7 @@ playwright install chromium   # one-time browser download
 python main.py                # Phase 1: writes data/amc_seed_list.json
 python phase2_discover.py     # Phase 2: writes data/amc_page_inventory.json
 python phase3_extract.py      # Phase 3: writes data/fund_managers.csv
+python phase4_enrich.py       # Phase 4: writes data/fund_managers_enriched.csv
 ```
 
 Docker (scraper image only):

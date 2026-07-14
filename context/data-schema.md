@@ -58,6 +58,18 @@ One row per (AMC, manager). Columns:
 
 Heuristic output — expect some misses and the occasional heading picked up as a name. An LLM pass would tighten it.
 
+## `data/fund_managers_enriched.csv` (Phase 4 output)
+
+Phase 3 columns plus:
+
+| Column | Meaning |
+|---|---|
+| `email_source` | Where a verified `email` came from: `amc_page`, `hunter`, `smtp`, or blank. |
+| `email_guess` | Most-likely corporate pattern (`first.last@domain`). A guess — never verified, kept separate from `email`. |
+| `linkedin_url` | Profile URL from a web search (stored, not scraped). Sparse in scrape mode (Bing throttles); reliable with `SERPAPI_KEY`. |
+
+Env toggles: `SERPAPI_KEY` (reliable LinkedIn search), `HUNTER_API_KEY` (verified emails), `VERIFY_SMTP=1` (SMTP RCPT check, needs dnspython).
+
 ## Source of a run (logged, not stored in the file)
 
 - `live_payload` — extracted from the members page's embedded hydration JSON (has `mf_id`, `legal_name`, official websites). Normal case; yields ~55 records as of July 2026, including not-yet-launched members (e.g. ASK, Lakshya) that have no website and get a slug guess.
