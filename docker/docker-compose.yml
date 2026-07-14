@@ -90,6 +90,22 @@ services:
     volumes:
       - qdrant-data:/qdrant/storage
 
+  # Self-hosted meta-search for Phase 4 LinkedIn discovery — no API key,
+  # aggregates Bing/Google/DDG so it doesn't throttle like scraping one engine.
+  # Point the scraper at it: SEARXNG_URL=http://searxng:8080 (in-compose) or
+  # http://localhost:8080 (host). JSON API is enabled via the settings below.
+  searxng:
+    image: searxng/searxng:latest
+    container_name: mf-searxng
+    ports:
+      - "8080:8080"
+    environment:
+      SEARXNG_BASE_URL: http://localhost:8080/
+    volumes:
+      # Bind-mounted settings enable the JSON API out of the box (the default
+      # build serves HTML only). No first-run manual edit needed.
+      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
+
 volumes:
   minio-data:
   hf-cache:

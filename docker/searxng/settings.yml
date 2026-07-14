@@ -1,0 +1,24 @@
+# Minimal SearXNG config for MF-Engine Phase 4 LinkedIn discovery.
+# Enables the JSON API (default build allows HTML only) and disables the
+# rate limiter for local pipeline use. Mounted read-only at /etc/searxng.
+use_default_settings: true
+
+server:
+  # Change this to any random string before exposing beyond localhost.
+  secret_key: "mf-engine-local-change-me"
+  limiter: false
+  image_proxy: false
+
+search:
+  formats:
+    - html
+    - json
+  # Engines the pipeline aggregates; SearXNG rotates across them so no single
+  # engine throttles the way a direct scrape does.
+  autocomplete: ""
+
+engines:
+  - name: bing
+    disabled: false
+  - name: duckduckgo
+    disabled: false

@@ -9,17 +9,20 @@ Reads data/fund_managers.csv (Phase 3) and adds, per manager:
   - email_guess  : best-effort corporate pattern (first.last@domain). Clearly
                    separate from `email` — a guess, not asserted fact.
 
-Search: SerpAPI (Bing engine) when SERPAPI_KEY is set — reliable JSON, free
-tier ~100/mo. Otherwise falls back to scraping Bing through Crawl4AI's stealth
-Chromium, which is best-effort: the free endpoint throttles after ~20-30
-queries (result pages thin out, LinkedIn hits vanish), so scrape mode won't
-cover a full roster in one run. Either way only the discovered profile URL is
-stored — no LinkedIn page is ever fetched.
+Search backend, first available wins:
+  1. SearXNG  (SEARXNG_URL)  — self-hosted meta-search, no key, no throttle;
+     runs as a container in docker/docker-compose.yml. Recommended.
+  2. SerpAPI  (SERPAPI_KEY)  — hosted Google/Bing JSON, free tier ~100/mo.
+  3. Bing scrape (fallback)  — best-effort via Crawl4AI stealth; the free
+     endpoint throttles after ~20-30 queries, so it can't cover a full roster.
+Either way only the discovered profile URL is stored — no LinkedIn page is
+ever fetched.
 
 Output: data/fund_managers_enriched.csv
 
 Env:
-  SERPAPI_KEY      use SerpAPI (Bing) for reliable LinkedIn discovery
+  SEARXNG_URL      base URL of a SearXNG instance, e.g. http://localhost:8080
+  SERPAPI_KEY      use SerpAPI for reliable LinkedIn discovery
   HUNTER_API_KEY   use Hunter.io email-finder for verified emails
   VERIFY_SMTP=1    attempt SMTP RCPT verification of guessed emails (slow,
                    often blocked by corporate mail servers; needs dnspython)
@@ -64,7 +67,10 @@ LINKEDIN_RE = re.compile(
     r"https?://(?:[a-z]{2,3}\.)?linkedin\.com/in/[A-Za-z0-9\-_%]+", re.IGNORECASE
 )
 
+SEARXNG_URL = os.environ.get("SEARXNG_URL", "").rstrip("/")
 SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+ANTHROPIC_SEARCH_MODEL = os.environ.get("ANTHROPIC_SEARCH_MODEL", "claude-haiku-4-5-20251001")
 HUNTER_API_KEY = os.environ.get("HUNTER_API_KEY", "")
 VERIFY_SMTP = os.environ.get("VERIFY_SMTP") == "1"
 MAX_MANAGERS = int(os.environ.get("MAX_MANAGERS", "0"))
@@ -125,35 +131,106 @@ async def _bing_once(crawler: AsyncWebCrawler, query: str) -> str:
     return ""
 
 
-async def serpapi_linkedin(
-    client: httpx.AsyncClient, query: str
-) -> tuple[str, bool]:
-    """(profile_url, api_used). Reliable when SERPAPI_KEY is set."""
+def _first_in_profile(text: str) -> str:
+    """First linkedin.com/in profile URL in a blob of text/JSON, else ''."""
+    hits = LINKEDIN_RE.findall(text or "")
+    return hits[0].split("?")[0] if hits else ""
+
+
+async def searxng_linkedin(client: httpx.AsyncClient, query: str) -> tuple[str, bool]:
+    """(profile_url, backend_used). SearXNG JSON API — no key, self-hosted."""
+    if not SEARXNG_URL:
+        return "", False
+    try:
+        resp = await client.get(
+            f"{SEARXNG_URL}/search",
+            params={"q": query, "format": "json", "engines": "bing,google,duckduckgo"},
+        )
+        for item in resp.json().get("results", []):
+            hit = _first_in_profile(item.get("url", ""))
+            if hit:
+                return hit, True
+        return "", True
+    except Exception:
+        log.debug("searxng failed: %s", query)
+        return "", True
+
+
+async def serpapi_linkedin(client: httpx.AsyncClient, query: str) -> tuple[str, bool]:
+    """(profile_url, backend_used). Reliable when SERPAPI_KEY is set."""
     if not SERPAPI_KEY:
         return "", False
     try:
         resp = await client.get(
             "https://serpapi.com/search",
-            params={"engine": "bing", "q": query, "api_key": SERPAPI_KEY},
+            params={"engine": "google", "q": query, "api_key": SERPAPI_KEY},
         )
-        blob = resp.text
-        hits = LINKEDIN_RE.findall(blob)
-        return (hits[0].split("?")[0] if hits else ""), True
+        return _first_in_profile(resp.text), True
     except Exception:
         log.debug("serpapi failed: %s", query)
         return "", True
 
 
+def _anthropic_search_sync(query: str) -> str:
+    """Anthropic server-side web_search tool — the same backend Claude Code's
+    WebSearch uses. Reproducible, ~$10/1k searches. Returns a profile URL."""
+    try:
+        import anthropic
+    except ImportError:
+        return ""
+    try:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        msg = client.messages.create(
+            model=ANTHROPIC_SEARCH_MODEL,
+            max_tokens=400,
+            tools=[
+                {
+                    "type": "web_search_20250305",
+                    "name": "web_search",
+                    "max_uses": 1,
+                    "allowed_domains": ["linkedin.com"],
+                }
+            ],
+            messages=[
+                {
+                    "role": "user",
+                    "content": (
+                        f"Find the LinkedIn profile URL for {query}. "
+                        "Reply with only the linkedin.com/in/... URL, nothing else."
+                    ),
+                }
+            ],
+        )
+        # scan every text/result block for a profile URL
+        return _first_in_profile("\n".join(str(b) for b in msg.content))
+    except Exception:
+        log.debug("anthropic web_search failed: %s", query)
+        return ""
+
+
+async def anthropic_linkedin(query: str) -> tuple[str, bool]:
+    if not ANTHROPIC_API_KEY:
+        return "", False
+    hit = await asyncio.to_thread(_anthropic_search_sync, query)
+    return hit, True
+
+
 async def find_linkedin(
     crawler: AsyncWebCrawler, client: httpx.AsyncClient, name: str, firm: str
 ) -> str:
-    """Profile URL via SerpAPI (if keyed) else best-effort Bing scrape. Stored
-    only, never scraped. One scrape retry after a pause — a thin (throttled)
-    page yields nothing."""
-    query = f"{name} {firm_for_query(firm)} linkedin"
-    hit, api_used = await serpapi_linkedin(client, query)
-    if api_used:
-        return hit
+    """Profile URL, first available backend wins: SearXNG → Anthropic
+    web_search → SerpAPI → best-effort Bing scrape. Stored only, never scraped."""
+    query = f"{name} {firm_for_query(firm)} fund manager linkedin"
+    for backend in (
+        lambda: searxng_linkedin(client, query),
+        lambda: anthropic_linkedin(query),
+        lambda: serpapi_linkedin(client, query),
+    ):
+        hit, used = await backend()
+        if used:
+            return hit
+
+    # No search backend configured — best-effort scrape (throttles).
     hit = await _bing_once(crawler, query)
     if not hit:
         await asyncio.sleep(random.uniform(6.0, 9.0))
@@ -231,9 +308,16 @@ async def main() -> int:
     rows = list(csv.DictReader(INPUT_CSV.open(encoding="utf-8")))
     if MAX_MANAGERS:
         rows = rows[:MAX_MANAGERS]
+    backend = (
+        "searxng" if SEARXNG_URL
+        else "anthropic" if ANTHROPIC_API_KEY
+        else "serpapi" if SERPAPI_KEY
+        else "bing-scrape"
+    )
     log.info(
-        "Enriching %d managers | hunter=%s smtp_verify=%s",
+        "Enriching %d managers | search=%s hunter=%s smtp_verify=%s",
         len(rows),
+        backend,
         bool(HUNTER_API_KEY),
         VERIFY_SMTP,
     )
@@ -278,11 +362,12 @@ async def main() -> int:
                     verified or ("guess:" + row["email_guess"] if row["email_guess"] else "-"),
                 )
 
-            # Serial with jittered delay when scraping (Bing throttles bursts);
-            # no delay needed when SerpAPI serves the search.
+            # Serial with jittered delay only when scraping (Bing throttles
+            # bursts); a configured search backend needs no pacing.
+            scraping = not (SEARXNG_URL or ANTHROPIC_API_KEY or SERPAPI_KEY)
             for i, row in enumerate(rows):
                 await enrich(row)
-                if not SERPAPI_KEY and i + 1 < len(rows):
+                if scraping and i + 1 < len(rows):
                     await asyncio.sleep(random.uniform(*SEARCH_DELAY_RANGE))
 
     fields = [
