@@ -1,0 +1,57 @@
+amc_id,firm_name,legal_name,clean_name,base_domain,sitemap_url,sitemap_type,sitemap_verified
+3,Aditya Birla Sun Life Mutual Fund,Aditya Birla Sun Life AMC Limited,Aditya Birla Sun Life,mutualfund.adityabirlacapital.com,https://mutualfund.adityabirlacapital.com/sitemap.xml,xml,True
+4,Baroda BNP Paribas Mutual Fund,Baroda BNP Paribas Asset Management India Private Limited,Baroda BNP Paribas,barodabnpparibasmf.in,https://www.barodabnpparibasmf.in/sitemap.xml,xml,True
+6,DSP Mutual Fund,DSP Asset Managers Private Limited,DSP,dspim.com,https://www.dspim.com/sitemap.xml,xml,True
+9,HDFC Mutual Fund,HDFC Asset Management Company Limited,HDFC,hdfcfund.com,https://hdfcfund.com/sitemap.xml,xml,False
+13,quant Mutual Fund,quant Money Managers Limited,quant,quantmutual.com,https://quantmutual.com/sitemap.xml,xml,True
+16,JM Financial Mutual Fund,JM Financial Asset Management Limited,JM Financial,jmfinancialmf.com,https://www.jmfinancialmf.com/sitemap.xml,xml,True
+17,Kotak Mahindra Mutual Fund,Kotak Mahindra Asset Management Company Limited.,Kotak Mahindra,kotakmf.com,https://www.kotakmf.com/sitemap.xml,xml,True
+18,LIC Mutual Fund,LIC Mutual Fund Asset Management Limited,LIC,licmf.com,https://www.licmf.com/sitemap.xml,xml,True
+20,ICICI Prudential Mutual Fund,ICICI Prudential Asset Management Company Limited,ICICI Prudential,icicipruamc.com,https://icicipruamc.com/sitemap.xml,xml,False
+21,Nippon India Mutual Fund,Nippon Life India Asset Management Limited,Nippon India,mf.nipponindiaim.com,https://mf.nipponindiaim.com:443/sitemap.xml,xml,True
+22,SBI Mutual Fund,SBI Funds Management Limited,SBI,sbimf.com,https://www.sbimf.com/sitemap.xml,xml,True
+25,Tata Mutual Fund,Tata Asset Management Limited,Tata,tatamutualfund.com,https://www.tatamutualfund.com/sitemap.xml,xml,True
+26,Taurus Mutual Fund,Taurus Asset Management Company Limited,Taurus,taurusmutualfund.com,https://taurusmutualfund.com/sitemap,html,True
+27,Franklin Templeton Mutual Fund,Franklin Templeton Asset Management (India) Private Limited,Franklin Templeton,franklintempletonindia.com,https://franklintempletonindia.com/sitemap.xml,xml,False
+28,UTI Mutual Fund,UTI Asset Mgmt. Co. Ltd.,UTI,utimf.com,https://utimf.com/sitemap.xml,xml,False
+32,Canara Robeco Mutual Fund,Canara Robeco Asset Management Company Limited,Canara Robeco,canararobeco.com,https://www.canararobeco.com/sitemap.xml,xml,True
+33,Sundaram Mutual Fund,Sundaram Asset Management Company Ltd,Sundaram,sundarammutual.com,https://sundarammutual.com/sitemap.xml,xml,False
+37,HSBC Mutual Fund,HSBC Asset Management (India) Private Ltd.,HSBC,assetmanagement.hsbc.co.in,https://assetmanagement.hsbc.co.in/sitemap.xml,xml,False
+41,Quantum Mutual Fund,Quantum Asset Management Company Private Limited,Quantum,quantumamc.com,https://www.quantumamc.com/sitemap.xml,xml,True
+42,Invesco Mutual Fund,Invesco Asset Management (India) Private Limited,Invesco,invescomutualfund.com,https://www.invescomutualfund.com/sitemap.xml,xml,True
+45,Mirae Asset Mutual Fund,Mirae Asset Investment Managers (India) Pvt. Ltd,Mirae Asset,miraeassetmf.co.in,https://www.miraeassetmf.co.in/sitemap.xml,xml,True
+46,Bank of India Mutual Fund,Bank of India Investment Managers Private Limited,Bank of India,boimf.in,https://www.boimf.in/sitemap.xml,xml,True
+47,Edelweiss Mutual Fund,Edelweiss Asset Management Limited,Edelweiss,edelweissmf.com,https://www.edelweissmf.com/sitemap.xml,xml,True
+48,Bandhan Mutual Fund,Bandhan AMC Limited,Bandhan,bandhanmutual.com,https://bandhanmutual.com/sitemap.xml,xml,True
+53,Axis Mutual Fund,Axis Asset Management Co. Ltd.,Axis,axismf.com,https://www.axismf.com/sitemap-index.xml,xml,True
+54,Navi Mutual Fund,Navi AMC Limited,Navi,navimutualfund.com,https://navimutualfund.com/sitemap.xml,xml,False
+55,Motilal Oswal Mutual Fund,Motilal Oswal Asset Management Company Limited,Motilal Oswal,motilaloswalmf.com,https://www.motilaloswalmf.com/sitemap.xml,xml,True
+58,PGIM India Mutual Fund,PGIM India Asset Management Private Limite,PGIM India,pgimindiamf.com,https://www.pgimindia.com/sitemap.xml,xml,True
+61,Union Mutual Fund,Union Asset Management Company Private Limited,Union,unionmf.com,https://unionmf.com/sitemap.xml,xml,False
+62,360 ONE Mutual Fund,360 ONE Asset Management Limited,360 ONE,360.one,https://www.360.one/sitemap.xml,xml,True
+63,Groww Mutual Fund,Groww Asset Management Limited,Groww,growwmf.in,https://www.growwmf.in/sitemap.xml,xml,True
+64,PPFAS Mutual Fund,PPFAS Asset Management Pvt. Ltd.,PPFAS,amc.ppfas.com,https://amc.ppfas.com/sitemap.xml,xml,True
+65,IL\u0026FS Mutual Fund (IDF),IL\u0026FS Infra Asset Management Limited,IL\u0026FS Mutual Fund (IDF),ilfsinfrafund.com,https://ilfsinfrafund.com/sitemap.xml,xml,False
+67,Shriram Mutual Fund,Shriram Asset Management Co. Ltd.,Shriram,shriramamc.in,http://www.shriramamc.in/sitemap.xml,xml,True
+69,Mahindra Manulife Mutual Fund,Mahindra Manulife Investment Management Pvt Ltd,Mahindra Manulife,mahindramanulife.com,https://www.mahindramanulife.com/sitemap.xml,xml,True
+70,ITI Mutual Fund,ITI Asset Management Limited,ITI,itiamc.com,https://www.itiamc.com/sitemap-index.xml,xml,True
+71,WhiteOak Capital Mutual Fund,WhiteOak Capital Asset Management Limited,WhiteOak Capital,mf.whiteoakamc.com,https://mf.whiteoakamc.com/sitemap.xml,xml,True
+72,Trust Mutual Fund,Trust Asset Management Private Limited,Trust,trustmf.com,https://www.trustmf.com/sitemap.xml,xml,True
+73,NJ Mutual Fund,NJ Asset Management Private Limited,NJ,njmutualfund.com,https://www.njmutualfund.com/sitemap.xml,xml,True
+74,Samco Mutual Fund,Samco Asset Management Private Limited,Samco,samcomf.com,https://www.samcomf.com/sitemap.xml,xml,True
+75,Bajaj Finserv Mutual Fund,Bajaj Finserv Asset Management Limited,Bajaj Finserv,bajajamc.com,https://www.bajajamc.com/sitemap_index.xml,xml,True
+76,Helios Mutual Fund,Helios Capital Asset Management (India) Pvt. Ltd.,Helios,heliosmf.in,https://www.heliosmf.in/sitemap.xml,xml,True
+77,Zerodha Mutual Fund,Zerodha Asset Management Private Limited,Zerodha,zerodhafundhouse.com,https://www.zerodhafundhouse.com/sitemap.xml,xml,True
+78,Old Bridge Mutual Fund,Old Bridge Asset Management Private Limited,Old Bridge,oldbridgemf.com,https://www.oldbridgemf.com/sitemap.xml,xml,True
+79,Unifi Mutual Fund,Unifi Asset Management Private Limited,Unifi,unifimf.com,https://unifimf.com/sitemap.xml,xml,False
+80,Angel One Mutual Fund,Angel One Asset Management Company Limited,Angel One,angelonemf.com,https://www.angelonemf.com/sitemap.xml,xml,True
+81,Capitalmind Mutual Fund,Capitalmind Asset Management Private Limited,Capitalmind,capitalmindmf.com,https://capitalmindmf.com/sitemap.xml,xml,True
+82,Jio BlackRock Mutual Fund,Jio BlackRock Asset Management Private Limited,Jio BlackRock,jioblackrockamc.com,https://www.jioblackrockamc.com/sitemap.xml,xml,True
+83,The Wealth Company Mutual Fund,Wealth Company Asset Management Holdings Private Limited,The Wealth Company,wealthcompanyamc.in,https://wealthcompanyamc.in/sitemap.xml,xml,False
+84,Choice Mutual Fund,Choice AMC Private Limited,Choice,choicemf.com,https://choicemf.com/sitemap.xml,xml,True
+85,Abakkus Mutual Fund,Abakkus Investment Managers Private Limited,Abakkus,abakkusmf.com,https://www.abakkusmf.com/sitemap.xml,xml,True
+86,AlphaGrep Mutual Fund,AlphaGrep Investment Management Private Limited,AlphaGrep,alphagrepmf.ai,https://alphagrepmf.ai/sitemap.xml,xml,False
+87,ASK MUTUAL FUND,ASK ASSET MANAGEMENT PRIVATE LIMITED,ASK,www.askmf.com,https://www.askmf.com/sitemap.xml,xml,False
+88,Lakshya Mutual Fund,Lakshya Asset Management Private Limited,Lakshya,www.lakshyamf.com,https://www.lakshyamf.com/sitemap.xml,xml,False
+89,Monarch Mutual Fund,Monarch Networth Asset Management Private Limited,Monarch,monarchamc.in,https://monarchamc.in/sitemap.xml,xml,True
+90,Nuvama Mutual Fund,Nuvama Asset Management Limited,Nuvama,www.nuvamamf.com,https://www.nuvamamf.com/sitemap.xml,xml,False

@@ -17,6 +17,7 @@ import asyncio
 import csv
 import json
 import logging
+import os
 import re
 import sys
 from pathlib import Path
@@ -30,8 +31,10 @@ logging.basicConfig(
 )
 log = logging.getLogger("mf-engine.extract")
 
-INVENTORY_PATH = Path("data/amc_page_inventory.json")
-OUTPUT_CSV = Path("data/fund_managers.csv")
+# Defaults target the AMFI pipeline; override to extract from another roster's
+# inventory (e.g. SEBI portfolio managers — see src/pms_seed.py).
+INVENTORY_PATH = Path(os.environ.get("INVENTORY_PATH", "data/amc_page_inventory.json"))
+OUTPUT_CSV = Path(os.environ.get("MANAGERS_CSV", "data/fund_managers.csv"))
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "

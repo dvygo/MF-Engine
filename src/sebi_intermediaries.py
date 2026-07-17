@@ -28,6 +28,7 @@ Usage:
 """
 
 import asyncio
+import csv
 import json
 import logging
 import re
@@ -51,6 +52,14 @@ REFERER_TMPL = (
     "?doRecognisedFpi=yes&intmId={intm_id}"
 )
 DATA_DIR = Path("data")
+CSV_DIR = DATA_DIR / "csv"
+
+# Column order for the CSV exports.
+CSV_COLUMNS = [
+    "sebi_id", "name", "reg_no", "category", "contact_person", "email",
+    "telephone", "fax", "website", "domain", "city", "state", "address",
+    "correspondence_address", "validity", "sebi_type",
+]
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -93,8 +102,33 @@ def page_form(intm_id: int, page_index: int) -> dict:
     }
 
 
+# SEBI publishes far more per firm than name/address — contact details and a
+# website are right there in the directory. Map its labels to record keys.
+FIELD_MAP = {
+    "name": "name",
+    "registration no.": "reg_no",
+    "e-mail": "email",
+    "telephone": "telephone",
+    "fax no.": "fax",
+    "website": "website",
+    "contact person": "contact_person",
+    "address": "address",
+    "correspondence address": "correspondence_address",
+    "validity": "validity",
+}
+RECORD_FIELDS = [
+    "name", "reg_no", "contact_person", "email", "telephone", "fax",
+    "website", "address", "correspondence_address", "validity",
+]
+
+
 def parse_records(html: str) -> list[dict]:
-    """Group SEBI card-view label/value blocks into one record per firm."""
+    """Group SEBI card-view label/value blocks into one record per firm.
+
+    A new record starts at each 'Name' label; every subsequent label until the
+    next 'Name' belongs to it. Fields are optional — SEBI leaves e-mail,
+    website, phone etc. blank for some firms.
+    """
     soup = BeautifulSoup(html, "html.parser")
     container = soup.find(id="ajax_cat") or soup
     records: list[dict] = []
@@ -103,18 +137,15 @@ def parse_records(html: str) -> list[dict]:
         parts = [p for p in card.get_text("||", strip=True).split("||") if p]
         if len(parts) < 2:
             continue
-        label = parts[0].lower()
+        label = parts[0].strip().lower()
         value = " ".join(parts[1:]).strip()
-        if label.startswith("name"):
-            current = {"name": value, "reg_no": "", "address": "", "validity": ""}
+        key = FIELD_MAP.get(label)
+        if key == "name":
+            current = {f: "" for f in RECORD_FIELDS}
+            current["name"] = value
             records.append(current)
-        elif current is not None:
-            if "regist" in label:
-                current["reg_no"] = value
-            elif "address" in label:
-                current["address"] = value
-            elif "valid" in label:
-                current["validity"] = value
+        elif current is not None and key:
+            current[key] = value
     return [r for r in records if r["reg_no"]]
 
 
@@ -131,6 +162,24 @@ def city_state(address: str) -> tuple[str, str]:
     if len(tokens) >= 2:
         return tokens[-2].title(), tokens[-1].title()
     return "", ""
+
+
+def website_domain(website: str) -> str:
+    """Bare domain from SEBI's free-text website field ('www.x.com', 'http://x.com')."""
+    site = website.strip().lower()
+    if not site or "@" in site:  # some rows put an email here
+        return ""
+    site = re.sub(r"^https?://", "", site)
+    site = site.split("/")[0].split()[0] if site else ""
+    return site.removeprefix("www.")
+
+
+def aif_category(reg_no: str) -> str:
+    """AIF registration numbers encode the category: IN/AIF1|2|3/... -> I/II/III."""
+    m = re.search(r"/AIF([123])/", reg_no, re.IGNORECASE)
+    return {"1": "Category I", "2": "Category II", "3": "Category III"}.get(
+        m.group(1) if m else "", ""
+    )
 
 
 async def fetch_page(client: httpx.AsyncClient, intm_id: int, page_index: int) -> str:
@@ -169,6 +218,8 @@ async def scrape_type(client: httpx.AsyncClient, slug: str) -> list[dict]:
         for r in new:
             seen.add(r["reg_no"])
             r["city"], r["state"] = city_state(r["address"])
+            r["domain"] = website_domain(r["website"])
+            r["category"] = aif_category(r["reg_no"]) if slug == "aif" else ""
             r["sebi_type"] = slug
             records.append(r)
         if not new:  # pager wrapped or ran out
@@ -183,6 +234,13 @@ async def scrape_type(client: httpx.AsyncClient, slug: str) -> list[dict]:
     for i, r in enumerate(records, start=1):
         r["sebi_id"] = i
     return records
+
+
+def write_csv(path: Path, records: list[dict]) -> None:
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(records)
 
 
 async def main() -> int:
@@ -201,7 +259,9 @@ async def main() -> int:
 
     log.info("Scraping SEBI intermediaries: %s", ", ".join(slugs))
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    CSV_DIR.mkdir(parents=True, exist_ok=True)
     grand_total = 0
+    combined: list[dict] = []
 
     async with httpx.AsyncClient(
         timeout=25.0,
@@ -218,12 +278,25 @@ async def main() -> int:
                     "%s: no records parsed — endpoint/structure may have changed", slug
                 )
                 continue
-            out = DATA_DIR / f"sebi_{slug.replace('-', '_')}.json"
+            stem = f"sebi_{slug.replace('-', '_')}"
+            out = DATA_DIR / f"{stem}.json"
             out.write_text(
                 json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8"
             )
+            write_csv(CSV_DIR / f"{stem}.csv", records)
+            combined.extend(records)
             grand_total += len(records)
-            log.info("Wrote %d %s to %s", len(records), slug, out)
+            with_site = sum(1 for r in records if r["domain"])
+            with_mail = sum(1 for r in records if r["email"])
+            log.info(
+                "Wrote %d %s — %d with website, %d with e-mail (%s, %s)",
+                len(records), slug, with_site, with_mail, out, CSV_DIR / f"{stem}.csv",
+            )
+
+    if combined:
+        # One roll-up of every wealth manager scraped this run.
+        write_csv(CSV_DIR / "wealth_managers.csv", combined)
+        log.info("Wrote %d rows to %s", len(combined), CSV_DIR / "wealth_managers.csv")
 
     log.info("Done — %d records across %d type(s)", grand_total, len(slugs))
     return 0 if grand_total else 1

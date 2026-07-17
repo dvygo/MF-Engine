@@ -17,6 +17,7 @@ Usage:
 import asyncio
 import json
 import logging
+import os
 import re
 import sys
 from pathlib import Path
@@ -34,8 +35,10 @@ logging.basicConfig(
 log = logging.getLogger("mf-engine.discover")
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-SEED_PATH = Path("data/amc_seed_list.json")
-OUTPUT_PATH = Path("data/amc_page_inventory.json")
+# Defaults target the AMFI pipeline; override to run the same discovery over
+# another roster (e.g. SEBI portfolio managers — see src/pms_seed.py).
+SEED_PATH = Path(os.environ.get("SEED_PATH", "data/amc_seed_list.json"))
+OUTPUT_PATH = Path(os.environ.get("INVENTORY_PATH", "data/amc_page_inventory.json"))
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
