@@ -21,6 +21,6 @@ docker/.env
 Thumbs.db
 
 
-# Frontend lives in its own repo: github.com/dvygo/wealth-managers-internal
-# (src/build_web_data.py still writes its data shards into web/public/data/)
-web/
+
+# web/ is a git submodule -> github.com/dvygo/wealth-managers-internal
+# (its own .gitignore covers node_modules, .next, .env*, .vercel)
