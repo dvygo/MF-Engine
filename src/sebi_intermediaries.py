@@ -57,8 +57,8 @@ CSV_DIR = DATA_DIR / "csv"
 # Column order for the CSV exports.
 CSV_COLUMNS = [
     "sebi_id", "name", "reg_no", "category", "contact_person", "email",
-    "telephone", "fax", "website", "domain", "city", "state", "address",
-    "correspondence_address", "validity", "sebi_type",
+    "telephone", "fax", "website", "domain", "pincode", "city", "state",
+    "address", "correspondence_address", "validity", "sebi_type",
 ]
 
 USER_AGENT = (
@@ -155,6 +155,16 @@ def total_records(html: str) -> int:
     return int(m.group(1).replace(",", "")) if m else 0
 
 
+def extract_pincode(address: str) -> str:
+    """The 6-digit PIN from a SEBI address — the join key into data/pincodes.json.
+
+    Indian PINs never start with 0, which rules out phone fragments and years.
+    Takes the last match, since the PIN sits at the end of the address.
+    """
+    hits = re.findall(r"\b[1-9]\d{5}\b", address)
+    return hits[-1] if hits else ""
+
+
 def city_state(address: str) -> tuple[str, str]:
     """Best-effort (city, state) from a SEBI address tail: '..., CITY, STATE, PIN'."""
     tokens = [t.strip() for t in address.split(",") if t.strip()]
@@ -218,6 +228,10 @@ async def scrape_type(client: httpx.AsyncClient, slug: str) -> list[dict]:
         for r in new:
             seen.add(r["reg_no"])
             r["city"], r["state"] = city_state(r["address"])
+            # PIN from the correspondence address first — it's the current one
+            r["pincode"] = extract_pincode(r["correspondence_address"]) or extract_pincode(
+                r["address"]
+            )
             r["domain"] = website_domain(r["website"])
             r["category"] = aif_category(r["reg_no"]) if slug == "aif" else ""
             r["sebi_type"] = slug
