@@ -6,6 +6,7 @@
     "validity": "Mar 23, 2011 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 1
   },
   {
@@ -15,6 +16,7 @@
     "validity": "Aug 29, 2025 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 2
   },
   {
@@ -24,6 +26,7 @@
     "validity": "Dec 23, 1994 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 3
   },
   {
@@ -33,6 +36,7 @@
     "validity": "Mar 11, 2026 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 4
   },
   {
@@ -42,6 +46,7 @@
     "validity": "Nov 25, 2024 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 5
   },
   {
@@ -51,6 +56,7 @@
     "validity": "Feb 16, 2026 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 6
   },
   {
@@ -60,6 +66,7 @@
     "validity": "Dec 04, 2009 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 7
   },
   {
@@ -69,6 +76,7 @@
     "validity": "Feb 28, 2023 - Perpetual",
     "city": "Pune",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 8
   },
   {
@@ -78,6 +86,7 @@
     "validity": "Mar 13, 2000 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 9
   },
   {
@@ -87,6 +96,7 @@
     "validity": "Mar 31, 2008 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 10
   },
   {
@@ -96,6 +106,7 @@
     "validity": "Nov 21, 1994 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 11
   },
   {
@@ -105,6 +116,7 @@
     "validity": "Oct 19, 1993 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 12
   },
   {
@@ -114,6 +126,7 @@
     "validity": "Apr 11, 2025 - Perpetual",
     "city": "Bangalore",
     "state": "Karnataka",
+    "sebi_type": "mutual-funds",
     "sebi_id": 13
   },
   {
@@ -123,6 +136,7 @@
     "validity": "Aug 01, 2025 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 14
   },
   {
@@ -132,6 +146,7 @@
     "validity": "Dec 17, 1993 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 15
   },
   {
@@ -141,6 +156,7 @@
     "validity": "Jan 30, 1997 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 16
   },
   {
@@ -150,6 +166,7 @@
     "validity": "Apr 30, 2008 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 17
   },
   {
@@ -159,6 +176,7 @@
     "validity": "Feb 19, 1996 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 18
   },
   {
@@ -168,6 +186,7 @@
     "validity": "Mar 24, 2011 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 19
   },
   {
@@ -177,6 +196,7 @@
     "validity": "Jun 30, 2000 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 20
   },
   {
@@ -186,6 +206,7 @@
     "validity": "Aug 10, 2023 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 21
   },
   {
@@ -195,6 +216,7 @@
     "validity": "May 27, 2002 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 22
   },
   {
@@ -204,15 +226,17 @@
     "validity": "Oct 13, 1993 - Perpetual",
     "city": "Delhi",
     "state": "National Capital Territory Of Delhi",
+    "sebi_type": "mutual-funds",
     "sebi_id": 23
   },
   {
     "name": "IDBI MUTUAL FUND",
     "reg_no": "MF/064/10/01",
-    "address": "IDBI Tower, WTC Complex, Cuffe Parade, MUMBAI, MAHARASHTRA, 400005",
+    "address": "IDBI Tower, WTC Complex,, Cuffe Parade,, MUMBAI, MAHARASHTRA, 400005",
     "validity": "Mar 29, 2010 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 24
   },
   {
@@ -222,6 +246,7 @@
     "validity": "Jan 24, 2013 - Perpetual",
     "city": "New Delhi",
     "state": "National Capital Territory Of Delhi",
+    "sebi_type": "mutual-funds",
     "sebi_id": 25
   },
   {
@@ -231,6 +256,7 @@
     "validity": "Feb 01, 2013 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 26
   },
   {
@@ -240,6 +266,7 @@
     "validity": "Jul 24, 2006 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 27
   },
   {
@@ -249,6 +276,7 @@
     "validity": "May 14, 2018 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 28
   },
   {
@@ -258,6 +286,7 @@
     "validity": "May 26, 2025 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 29
   },
   {
@@ -267,6 +296,7 @@
     "validity": "Sep 15, 1994 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 30
   },
   {
@@ -276,6 +306,7 @@
     "validity": "Jun 23, 1998 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 31
   },
   {
@@ -285,6 +316,7 @@
     "validity": "May 09, 1994 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 32
   },
   {
@@ -294,6 +326,7 @@
     "validity": "Feb 03, 2016 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 33
   },
   {
@@ -303,6 +336,7 @@
     "validity": "Feb 20, 2008 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 34
   },
   {
@@ -312,6 +346,7 @@
     "validity": "Apr 01, 2026 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 35
   },
   {
@@ -321,6 +356,7 @@
     "validity": "Dec 29, 2009 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 36
   },
   {
@@ -330,6 +366,7 @@
     "validity": "Apr 30, 2021 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 37
   },
   {
@@ -339,6 +376,7 @@
     "validity": "Dec 04, 2009 - Perpetual",
     "city": "Bangalore",
     "state": "Karnataka",
+    "sebi_type": "mutual-funds",
     "sebi_id": 38
   },
   {
@@ -348,6 +386,7 @@
     "validity": "Jun 30, 1995 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 39
   },
   {
@@ -357,6 +396,7 @@
     "validity": "Jun 08, 2026 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 40
   },
   {
@@ -366,6 +406,7 @@
     "validity": "Sep 01, 2023 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 41
   },
   {
@@ -375,6 +416,7 @@
     "validity": "May 13, 2010 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 42
   },
   {
@@ -384,6 +426,7 @@
     "validity": "Oct 11, 2012 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 43
   },
   {
@@ -393,6 +436,7 @@
     "validity": "Jul 03, 1996 - Perpetual",
     "city": "Delhi",
     "state": "National Capital Territory Of Delhi",
+    "sebi_type": "mutual-funds",
     "sebi_id": 44
   },
   {
@@ -402,6 +446,7 @@
     "validity": "Dec 02, 2005 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 45
   },
   {
@@ -411,6 +456,7 @@
     "validity": "Jul 30, 2021 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 46
   },
   {
@@ -420,6 +466,7 @@
     "validity": "Dec 23, 1993 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 47
   },
   {
@@ -429,6 +476,7 @@
     "validity": "Nov 21, 1994 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 48
   },
   {
@@ -438,6 +486,7 @@
     "validity": "Jan 03, 1997 - Perpetual",
     "city": "Chennai",
     "state": "Tamil Nadu",
+    "sebi_type": "mutual-funds",
     "sebi_id": 49
   },
   {
@@ -447,6 +496,7 @@
     "validity": "Jun 30, 1995 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 50
   },
   {
@@ -456,6 +506,7 @@
     "validity": "Sep 21, 1993 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 51
   },
   {
@@ -465,6 +516,7 @@
     "validity": "Jul 18, 2025 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 52
   },
   {
@@ -474,6 +526,7 @@
     "validity": "Oct 07, 2019 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 53
   },
   {
@@ -483,6 +536,7 @@
     "validity": "Nov 13, 2024 - Perpetual",
     "city": "Chennai",
     "state": "Tamil Nadu",
+    "sebi_type": "mutual-funds",
     "sebi_id": 54
   },
   {
@@ -492,6 +546,7 @@
     "validity": "Nov 08, 2016 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 55
   },
   {
@@ -501,6 +556,7 @@
     "validity": "Jan 14, 2003 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 56
   },
   {
@@ -510,6 +566,7 @@
     "validity": "Mar 25, 2026 - Perpetual",
     "city": "Ahmedabad",
     "state": "Gujarat",
+    "sebi_type": "mutual-funds",
     "sebi_id": 57
   },
   {
@@ -519,6 +576,7 @@
     "validity": "Jul 03, 2018 - Perpetual",
     "city": "Mumbai",
     "state": "Maharashtra",
+    "sebi_type": "mutual-funds",
     "sebi_id": 58
   },
   {
@@ -528,6 +586,7 @@
     "validity": "Aug 11, 2023 - Perpetual",
     "city": "Bangalore",
     "state": "Karnataka",
+    "sebi_type": "mutual-funds",
     "sebi_id": 59
   }
 ]

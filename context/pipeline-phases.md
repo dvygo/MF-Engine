@@ -48,11 +48,30 @@ Reads `data/fund_managers.csv` and adds, per manager, a LinkedIn profile URL and
 
 Fund manager ≠ MFD: the AMFI `/api/distributor-agent` endpoint lists distributors (with contacts) and is not a source for fund managers.
 
-## Side scraper — SEBI registered mutual funds (`src/sebi_mutual_funds.py`)
+## Side scraper — SEBI registered intermediaries (`src/sebi_intermediaries.py`)
 
-Standalone, not part of the 1→4 chain. Scrapes SEBI's official **Registered Mutual Funds** directory (the *regulator's* list) → `data/sebi_mutual_funds.json`: name, SEBI registration number, registered address (city/state parsed out), and registration/validity date — fields AMFI does not publish. Useful to cross-check the AMFI roster and to attach a regulatory registration number to each AMC.
+Standalone, not part of the 1→4 chain. Scrapes SEBI's official registered-intermediary directories (the *regulator's* lists) → `data/sebi_<type>.json`. Each record: name, SEBI registration number, registered address (city/state parsed out), registration/validity date — fields the industry bodies don't publish.
 
-The public page paginates via an AJAX POST its own `searchFormFpi()` makes to `getintmfpiinfo.jsp` with `doDirect=<page-1>` (0-based). No token or browser needed — the script calls that endpoint directly, page by page, with retries (SEBI drops rapid connections). Yields **59 registered mutual funds** (July 2026).
+This widens the project beyond mutual funds to the **broader Indian wealth-management universe**:
+
+| Type (slug) | intmId | Records (July 2026) |
+|---|---|---|
+| `mutual-funds` | 23 | 59 AMCs |
+| `portfolio-managers` | 33 | ~526 PMS firms |
+| `aif` | 16 | ~1,989 Alternative Investment Funds |
+| `investment-advisers` | 13 | ~1,044 RIAs |
+| `research-analysts` | 14 | — |
+| `merchant-bankers` | 9 | — |
+
+Every directory paginates via the AJAX call its own `searchFormFpi()` makes to `getintmfpiinfo.jsp`, POSTing `intmId` + `doDirect=<page-1>` (0-based) and returning an HTML fragment of ~25 records. No token or browser needed — the script calls that endpoint directly, page by page, with retries and a 1s gap (SEBI drops rapid connections). It reads the "of N records" total to know when to stop.
+
+```bash
+python src/sebi_intermediaries.py                    # wealth-manager set (default)
+python src/sebi_intermediaries.py mutual-funds aif   # specific types
+python src/sebi_intermediaries.py --all              # every known type
+```
+
+Counts can land 1–2 short of SEBI's stated total where a record ships a blank registration number (those are skipped rather than stored half-empty).
 
 ## Phase 6 — Persistence (planned)
 

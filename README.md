@@ -84,11 +84,19 @@ python src/phase4_enrich.py          # Phase 4 → data/fund_managers_enriched.c
 
 Phase 4's LinkedIn search needs a backend — set `BRAVE_API_KEY` (reliable) or point `SEARXNG_URL` at a local SearXNG (no key, best-effort). See [Configuration](#configuration).
 
-**Bonus — SEBI cross-check** (standalone): scrape the *regulator's* official registered-mutual-funds list (registration numbers, addresses, dates) that AMFI doesn't publish:
+**Bonus — SEBI registered intermediaries** (standalone): scrape the *regulator's* official directories — registration numbers, addresses, and dates that the industry bodies don't publish. Covers the broader wealth-management universe, not just mutual funds:
 
 ```bash
-python src/sebi_mutual_funds.py     # → data/sebi_mutual_funds.json (59 funds)
+python src/sebi_intermediaries.py                    # AMCs + PMS + AIF + RIAs
+python src/sebi_intermediaries.py mutual-funds aif   # or pick types
 ```
+
+| Type | Records | Output |
+|---|---|---|
+| `mutual-funds` | 59 AMCs | `data/sebi_mutual_funds.json` |
+| `portfolio-managers` | ~526 PMS firms | `data/sebi_portfolio_managers.json` |
+| `aif` | ~1,989 funds | `data/sebi_aif.json` |
+| `investment-advisers` | ~1,044 RIAs | `data/sebi_investment_advisers.json` |
 
 ### With Docker
 
