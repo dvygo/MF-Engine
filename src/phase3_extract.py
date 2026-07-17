@@ -109,6 +109,15 @@ GENERIC_EMAIL_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Placeholder addresses left in live page templates — dspim.com/our-team ships
+# 'loremipsum…@gmail.com', which would otherwise be attributed to every DSP
+# manager as if it were real contact data.
+JUNK_EMAIL_RE = re.compile(
+    r"lorem|ipsum|example\.(?:com|org|net)|@(?:test|domain|email|yourdomain|abc)\."
+    r"|^(?:test|dummy|sample|placeholder|your|yourname|email|abc|xyz|asdf|noreply|no-reply)@",
+    re.IGNORECASE,
+)
+
 
 def clean_ws(text: str) -> str:
     return re.sub(r"[ \t]+", " ", text).strip()
@@ -178,8 +187,11 @@ def page_emails(text: str) -> tuple[str, list[str]]:
     emails: list[str] = []
     for e in EMAIL_RE.findall(text):
         e = e.lower().rstrip(".")
-        if e not in emails and not e.endswith((".png", ".jpg", ".svg", ".gif")):
-            emails.append(e)
+        if e in emails or e.endswith((".png", ".jpg", ".svg", ".gif")):
+            continue
+        if JUNK_EMAIL_RE.search(e):  # template placeholder, not a real address
+            continue
+        emails.append(e)
     personal = next(
         (e for e in emails if not GENERIC_EMAIL_RE.match(e.split("@", 1)[0])), ""
     )

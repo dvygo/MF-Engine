@@ -1,7 +1,11 @@
 "use client";
 
 import MiniSearch from "minisearch";
+import GitHubButton from "react-github-btn";
 import { useEffect, useMemo, useState } from "react";
+
+const REPO = "dvygo/Fund-Manager-Web-Scraper";
+const REPO_URL = `https://github.com/${REPO}`;
 
 type Row = {
   k: "firm" | "manager";
@@ -159,20 +163,20 @@ export default function Home() {
         <h1 className="text-3xl font-bold tracking-tight">
           India Fund &amp; Wealth Manager Search
         </h1>
-        <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-2 text-sm text-neutral-600">
           {loading
             ? "Loading…"
             : `${rows.length.toLocaleString()} records — SEBI-registered firms (AMC · PMS · AIF · RIA) and the fund managers who run the money. Public sources only.`}
         </p>
       </header>
 
-      <div className="sticky top-0 z-10 -mx-4 mb-6 border-b border-neutral-200 bg-white/90 px-4 py-4 backdrop-blur dark:border-neutral-800 dark:bg-black/90">
+      <div className="sticky top-0 z-10 -mx-4 mb-6 border-b border-neutral-200 bg-white/90 px-4 py-4 backdrop-blur">
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search name, firm, city, pincode, reg no…  e.g. bangalore · 400051 · Naren"
-          className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-3 text-base outline-none focus:border-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:focus:border-neutral-300"
+          className="w-full border border-neutral-300 bg-white px-4 py-3 text-base outline-none focus:border-neutral-900"
         />
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
           <Select
@@ -207,7 +211,7 @@ export default function Home() {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-neutral-300 text-left dark:border-neutral-700">
+            <tr className="border-b border-neutral-300 text-left">
               <Th>Name</Th>
               <Th>Type</Th>
               <Th>Firm / Role</Th>
@@ -219,7 +223,7 @@ export default function Home() {
             {results.slice(0, limit).map((r, i) => (
               <tr
                 key={`${r.n}-${i}`}
-                className="border-b border-neutral-100 align-top dark:border-neutral-900"
+                className="border-b border-neutral-100 align-top"
               >
                 <td className="py-3 pr-3 font-medium">
                   {r.n}
@@ -228,15 +232,15 @@ export default function Home() {
                   )}
                 </td>
                 <td className="py-3 pr-3">
-                  <span className="whitespace-nowrap rounded bg-neutral-100 px-2 py-0.5 text-xs dark:bg-neutral-800">
+                  <span className="whitespace-nowrap bg-neutral-100 px-2 py-0.5 text-xs">
                     {r.k === "manager" ? "Manager" : (TYPE_LABELS[r.t ?? ""] ?? "Firm")}
                   </span>
                 </td>
-                <td className="py-3 pr-3 text-neutral-600 dark:text-neutral-400">
+                <td className="py-3 pr-3 text-neutral-600">
                   {r.firm ?? r.cp ?? "—"}
                   {r.role && <div className="text-xs text-neutral-500">{r.role}</div>}
                 </td>
-                <td className="py-3 pr-3 text-neutral-600 dark:text-neutral-400">
+                <td className="py-3 pr-3 text-neutral-600">
                   {r.c ?? "—"}
                   <div className="text-xs text-neutral-500">
                     {[r.d !== r.c ? r.d : null, r.s, r.p].filter(Boolean).join(" · ")}
@@ -246,7 +250,7 @@ export default function Home() {
                   {r.e && (
                     <a
                       href={`mailto:${r.e}`}
-                      className="block text-blue-600 hover:underline dark:text-blue-400"
+                      className="block text-blue-600 hover:underline"
                     >
                       {r.e}
                     </a>
@@ -256,7 +260,7 @@ export default function Home() {
                       href={`https://${r.w}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="block text-blue-600 hover:underline dark:text-blue-400"
+                      className="block text-blue-600 hover:underline"
                     >
                       {r.w}
                     </a>
@@ -266,7 +270,7 @@ export default function Home() {
                       href={r.li}
                       target="_blank"
                       rel="noreferrer"
-                      className="block text-blue-600 hover:underline dark:text-blue-400"
+                      className="block text-blue-600 hover:underline"
                     >
                       LinkedIn
                     </a>
@@ -286,7 +290,7 @@ export default function Home() {
             {suggestion && (
               <button
                 onClick={() => setQuery(suggestion)}
-                className="mt-2 text-sm text-blue-600 hover:underline dark:text-blue-400"
+                className="mt-2 text-sm text-blue-600 hover:underline"
               >
                 Did you mean <strong>{suggestion}</strong>?
               </button>
@@ -296,23 +300,62 @@ export default function Home() {
         {results.length > limit && (
           <button
             onClick={() => setLimit((l) => l + PAGE_SIZE)}
-            className="mx-auto mt-6 block rounded-lg border border-neutral-300 px-5 py-2 text-sm hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+            className="mx-auto mt-6 block border border-neutral-300 px-5 py-2 text-sm hover:bg-neutral-50"
           >
             Show more ({(results.length - limit).toLocaleString()} left)
           </button>
         )}
       </div>
 
-      <footer className="mt-16 border-t border-neutral-200 pt-6 text-xs text-neutral-500 dark:border-neutral-800">
-        Built by{" "}
-        <a
-          href="https://github.com/dvygo/Fund-Manager-Web-Scraper"
-          className="underline"
-        >
-          MF-Engine
-        </a>{" "}
-        from public sources: AMFI, SEBI registered-intermediary directories, AMC
-        websites, GeoNames pincodes. Contact details are as published by SEBI.
+      <footer className="mt-16 border-t border-neutral-200 pt-6 text-xs text-neutral-500">
+        {/* GitHub's own button widgets — live star / fork / issue counts,
+            rendered by buttons.github.io. */}
+        <div className="flex flex-wrap items-center gap-3">
+          <GitHubButton
+            href={REPO_URL}
+            data-icon="octicon-star"
+            data-size="large"
+            data-show-count="true"
+            aria-label={`Star ${REPO} on GitHub`}
+          >
+            Star
+          </GitHubButton>
+          <GitHubButton
+            href={`${REPO_URL}/fork`}
+            data-icon="octicon-repo-forked"
+            data-size="large"
+            data-show-count="true"
+            aria-label={`Fork ${REPO} on GitHub`}
+          >
+            Fork
+          </GitHubButton>
+          <GitHubButton
+            href={`${REPO_URL}/issues`}
+            data-icon="octicon-issue-opened"
+            data-size="large"
+            data-show-count="true"
+            aria-label={`Issue ${REPO} on GitHub`}
+          >
+            Issue
+          </GitHubButton>
+          <GitHubButton href={REPO_URL} data-size="large">
+            View source
+          </GitHubButton>
+        </div>
+        <p className="mt-4 max-w-3xl leading-relaxed">
+          Built from public sources: AMFI, SEBI registered-intermediary
+          directories, AMC websites, GeoNames pincodes. Firm contact details are
+          as published by SEBI. Apache-2.0 —{" "}
+          <a
+            href={`${REPO_URL}/tree/main/data/csv`}
+            target="_blank"
+            rel="noreferrer"
+            className="underline hover:text-neutral-900"
+          >
+            download the data as CSV
+          </a>
+          .
+        </p>
       </footer>
     </main>
   );
@@ -335,7 +378,7 @@ function Select({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-900"
+      className="border border-neutral-300 bg-white px-3 py-1.5"
     >
       {options.map(([v, label]) => (
         <option key={v} value={v}>

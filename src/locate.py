@@ -41,8 +41,10 @@ FIRM_SOURCES = [
     DATA_DIR / "sebi_aif.json",
     DATA_DIR / "sebi_investment_advisers.json",
 ]
+# Read the phases' own output, not the data/csv/ copies export_csv.py makes —
+# otherwise a re-scrape silently locates stale rows until that copy is refreshed.
 MANAGER_SOURCES = [
-    CSV_DIR / "fund_managers_enriched.csv",
+    DATA_DIR / "fund_managers_enriched.csv",
     DATA_DIR / "pms_managers.csv",
 ]
 OUT_MANAGERS = CSV_DIR / "managers_located.csv"
