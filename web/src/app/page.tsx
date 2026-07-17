@@ -3,6 +3,7 @@
 import MiniSearch from "minisearch";
 import GitHubButton from "react-github-btn";
 import { useEffect, useMemo, useState } from "react";
+import { allowsKind, allowsType2, authenticate, type User } from "./users";
 
 const REPO = "dvygo/Fund-Manager-Web-Scraper";
 const REPO_URL = `https://github.com/${REPO}`;
@@ -48,6 +49,7 @@ const TYPE_LABELS: Record<string, string> = {
 const PAGE_SIZE = 50;
 
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [query, setQuery] = useState("");
@@ -91,9 +93,19 @@ export default function Home() {
     };
   }, []);
 
+  // What this user is allowed to see. Cosmetic only — the shards in
+  // /public/data are fetchable regardless; this just shapes the UI.
+  const visible = useMemo(() => {
+    if (!user) return [];
+    return rows.filter(
+      (r) => allowsKind(user, r.k) && (r.k === "manager" || allowsType2(user, r.t)),
+    );
+  }, [rows, user]);
+
   // Index once, in the browser. ~3.9k rows is small enough to search entirely
   // client-side — no database, no API, no round-trip per keystroke.
   const index = useMemo(() => {
+    const rows = visible;
     if (!rows.length) return null;
     const mini = new MiniSearch({
       fields: ["n", "firm", "role", "tags", "r", "e", "w", "cp"],
@@ -109,11 +121,11 @@ export default function Home() {
     });
     mini.addAll(rows.map((r, id) => ({ ...r, id })));
     return mini;
-  }, [rows]);
+  }, [visible]);
 
   const states = useMemo(
-    () => [...new Set(rows.map((r) => r.s).filter(Boolean))].sort() as string[],
-    [rows],
+    () => [...new Set(visible.map((r) => r.s).filter(Boolean))].sort() as string[],
+    [visible],
   );
 
   // Suggestions come from the small, clean places corpus — not the main index.
@@ -145,28 +157,41 @@ export default function Home() {
   }, [query, placeIndex]);
 
   const results = useMemo(() => {
-    let out: Row[] = rows;
+    let out: Row[] = visible;
     if (query.trim() && index) {
-      out = index.search(query).map((h) => rows[h.id as number]);
+      out = index.search(query).map((h) => visible[h.id as number]);
     }
     if (kind !== "all") out = out.filter((r) => r.k === kind);
     if (type !== "all") out = out.filter((r) => r.t === type);
     if (state !== "all") out = out.filter((r) => r.s === state);
     return out;
-  }, [rows, index, query, kind, type, state]);
+  }, [visible, index, query, kind, type, state]);
 
   useEffect(() => setLimit(PAGE_SIZE), [query, kind, type, state]);
+
+  if (!user) return <Login onSignIn={setUser} />;
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">
-          India Fund &amp; Wealth Manager Search
-        </h1>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            India Fund &amp; Wealth Manager Search
+          </h1>
+          <div className="text-xs text-neutral-500">
+            {user.email}
+            <button
+              onClick={() => setUser(null)}
+              className="ml-3 border border-neutral-300 px-2 py-1 hover:bg-neutral-50"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
         <p className="mt-2 text-sm text-neutral-600">
           {loading
             ? "Loading…"
-            : `${rows.length.toLocaleString()} records — SEBI-registered firms (AMC · PMS · AIF · RIA) and the fund managers who run the money. Public sources only.`}
+            : `${visible.length.toLocaleString()} records visible to you — SEBI-registered firms (AMC · PMS · AIF · RIA) and the fund managers who run the money. Public sources only.`}
         </p>
       </header>
 
@@ -357,6 +382,57 @@ export default function Home() {
           .
         </p>
       </footer>
+    </main>
+  );
+}
+
+function Login({ onSignIn }: { onSignIn: (u: User) => void }) {
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [error, setError] = useState("");
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const u = authenticate(email, pass);
+    if (u) onSignIn(u);
+    else setError("Wrong email or password.");
+  }
+
+  return (
+    <main className="mx-auto flex max-w-sm flex-col justify-center px-4 py-24">
+      <h1 className="text-2xl font-bold tracking-tight">
+        India Fund &amp; Wealth Manager Search
+      </h1>
+      <p className="mt-2 text-sm text-neutral-600">Sign in to continue.</p>
+      <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@brightstar-research.com"
+          autoComplete="username"
+          className="border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-900"
+        />
+        <input
+          type="password"
+          value={pass}
+          onChange={(e) => setPass(e.target.value)}
+          placeholder="Password"
+          autoComplete="current-password"
+          className="border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-900"
+        />
+        <button
+          type="submit"
+          className="border border-neutral-900 bg-neutral-900 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-700"
+        >
+          Sign in
+        </button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </form>
+      <p className="mt-6 text-xs text-neutral-400">
+        Demo sign-in only — it shapes what this page shows, it does not protect
+        the data.
+      </p>
     </main>
   );
 }
