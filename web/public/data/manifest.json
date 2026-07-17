@@ -1,0 +1,48 @@
+{
+  "generated": "2026-07-17",
+  "total_rows": 4022,
+  "shards": [
+    {
+      "file": "firms_mutual_funds.json",
+      "rows": 59,
+      "hash": "07954d2f778a",
+      "bytes": 15721,
+      "updated": "2026-07-17"
+    },
+    {
+      "file": "firms_portfolio_managers.json",
+      "rows": 525,
+      "hash": "d1946b125f91",
+      "bytes": 184291,
+      "updated": "2026-07-17"
+    },
+    {
+      "file": "firms_aif.json",
+      "rows": 1988,
+      "hash": "96f04b40c72e",
+      "bytes": 627164,
+      "updated": "2026-07-17"
+    },
+    {
+      "file": "firms_investment_advisers.json",
+      "rows": 1044,
+      "hash": "4e70b2b04fb0",
+      "bytes": 381752,
+      "updated": "2026-07-17"
+    },
+    {
+      "file": "managers.json",
+      "rows": 245,
+      "hash": "b51daecd7d4c",
+      "bytes": 78555,
+      "updated": "2026-07-17"
+    },
+    {
+      "file": "places.json",
+      "rows": 161,
+      "hash": "26e11f073cbc",
+      "bytes": 6911,
+      "updated": "2026-07-17"
+    }
+  ]
+}

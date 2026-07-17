@@ -227,11 +227,16 @@ async def scrape_type(client: httpx.AsyncClient, slug: str) -> list[dict]:
         new = [r for r in parse_records(html) if r["reg_no"] not in seen]
         for r in new:
             seen.add(r["reg_no"])
-            r["city"], r["state"] = city_state(r["address"])
-            # PIN from the correspondence address first — it's the current one
-            r["pincode"] = extract_pincode(r["correspondence_address"]) or extract_pincode(
-                r["address"]
-            )
+            # Take city, state and PIN from ONE address. The correspondence
+            # address is the operational one where SEBI lists it; otherwise the
+            # registered office. Mixing them yields records like
+            # pincode=400063 (Mumbai) with city='New Delhi'.
+            located = r["correspondence_address"] or r["address"]
+            if not extract_pincode(located):  # unusable — fall back
+                located = r["address"] or r["correspondence_address"]
+            r["located_address"] = located
+            r["city"], r["state"] = city_state(located)
+            r["pincode"] = extract_pincode(located)
             r["domain"] = website_domain(r["website"])
             r["category"] = aif_category(r["reg_no"]) if slug == "aif" else ""
             r["sebi_type"] = slug

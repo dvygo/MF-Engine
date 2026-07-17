@@ -19,3 +19,8 @@ docker/.env
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# Next.js web app
+web/node_modules/
+web/.next/
+web/out/
